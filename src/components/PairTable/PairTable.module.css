@@ -1,0 +1,33 @@
+.table {
+  width: 100%;
+  margin-top: var(--space-4);
+  border-collapse: collapse;
+}
+
+.table thead th {
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.asset {
+  width: 45%;
+}
+
+.table .numeric {
+  text-align: right;
+}
+
+.table .trend {
+  display: none;
+  text-align: right;
+}
+
+@media (min-width: 48rem) {
+  .table .trend {
+    display: table-cell;
+  }
+}

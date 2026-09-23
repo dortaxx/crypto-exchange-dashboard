@@ -1,6 +1,7 @@
 .skeleton {
-  display: block;
+  display: inline-block;
   flex-shrink: 0;
+  vertical-align: middle;
   border-radius: var(--radius-sm);
   background: var(--surface-raised);
   animation: pulse 1.6s ease-in-out infinite;

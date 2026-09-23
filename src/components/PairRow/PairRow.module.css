@@ -1,0 +1,43 @@
+.row > * {
+  height: 4rem;
+  padding: 0;
+  vertical-align: middle;
+}
+
+.asset {
+  font-weight: inherit;
+  text-align: left;
+}
+
+.assetInner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.base {
+  color: var(--text-muted);
+}
+
+.numeric,
+.trend {
+  text-align: right;
+}
+
+.trend {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .trend {
+    display: table-cell;
+  }
+}

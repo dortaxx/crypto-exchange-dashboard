@@ -1,0 +1,17 @@
+.icon,
+.fallback {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.fallback {
+  display: inline-grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}

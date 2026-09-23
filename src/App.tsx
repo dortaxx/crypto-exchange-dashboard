@@ -1,12 +1,13 @@
 import styles from './App.module.css'
 import { AppHeader } from './components/AppHeader/AppHeader'
 import { Card } from './components/Card/Card'
-import { PairListSkeleton } from './components/PairListSkeleton/PairListSkeleton'
+import { PairTable } from './components/PairTable/PairTable'
 import { SectionHeading } from './components/SectionHeading/SectionHeading'
 import { StatStrip } from './components/StatStrip/StatStrip'
+import { DEFAULT_PAIRS } from './config/pairs'
 
 const sessionStats = [
-  { label: 'Pairs tracked' },
+  { label: 'Pairs tracked', value: String(DEFAULT_PAIRS.length) },
   { label: 'Top gainer since open' },
   { label: 'Top loser since open' },
   { label: 'Alerts' },
@@ -40,7 +41,7 @@ export function App() {
 
         <section aria-labelledby="markets-heading">
           <SectionHeading id="markets-heading" title="Markets" />
-          <PairListSkeleton rows={5} />
+          <PairTable pairs={DEFAULT_PAIRS} />
         </section>
       </main>
 
