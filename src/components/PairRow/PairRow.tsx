@@ -1,14 +1,16 @@
-import type { Pair } from '../../domain/types'
+import { formatPrice } from '../../domain/format'
+import type { Pair, Ticker } from '../../domain/types'
 import { CoinIcon } from '../CoinIcon/CoinIcon'
 import { Skeleton } from '../Skeleton/Skeleton'
 import styles from './PairRow.module.css'
 
 type PairRowProps = {
   pair: Pair
+  ticker: Ticker | undefined
   loadingDelayMs: number
 }
 
-export function PairRow({ pair, loadingDelayMs }: PairRowProps) {
+export function PairRow({ pair, ticker, loadingDelayMs }: PairRowProps) {
   return (
     <tr className={styles.row}>
       <th scope="row" className={styles.asset}>
@@ -19,7 +21,11 @@ export function PairRow({ pair, loadingDelayMs }: PairRowProps) {
         </span>
       </th>
       <td className={styles.numeric}>
-        <Skeleton width="5.5rem" height="0.875rem" delayMs={loadingDelayMs} />
+        {ticker === undefined ? (
+          <Skeleton width="5.5rem" height="0.875rem" delayMs={loadingDelayMs} />
+        ) : (
+          <span className={styles.price}>{formatPrice(ticker.price)}</span>
+        )}
       </td>
       <td className={styles.numeric}>
         <Skeleton width="3.5rem" height="0.875rem" delayMs={loadingDelayMs} />

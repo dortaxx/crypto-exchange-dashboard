@@ -4,3 +4,11 @@ export type Pair = {
   quote: 'USDT'
   name: string
 }
+
+export type Ticker = {
+  symbol: string
+  price: number
+  updatedAt: number
+}
+
+export type LoadStatus = 'loading' | 'ready' | 'error'

@@ -32,6 +32,11 @@
   text-align: right;
 }
 
+.price {
+  font-family: var(--font-figures);
+  font-weight: 500;
+}
+
 .trend {
   display: none;
 }

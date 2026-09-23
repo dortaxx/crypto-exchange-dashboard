@@ -1,10 +1,11 @@
 import styles from './App.module.css'
 import { AppHeader } from './components/AppHeader/AppHeader'
 import { Card } from './components/Card/Card'
-import { PairTable } from './components/PairTable/PairTable'
 import { SectionHeading } from './components/SectionHeading/SectionHeading'
 import { StatStrip } from './components/StatStrip/StatStrip'
 import { DEFAULT_PAIRS } from './config/pairs'
+import { PairTableContainer } from './containers/PairTableContainer'
+import { useTickerSnapshot } from './hooks/useTickerSnapshot'
 
 const sessionStats = [
   { label: 'Pairs tracked', value: String(DEFAULT_PAIRS.length) },
@@ -14,6 +15,8 @@ const sessionStats = [
 ]
 
 export function App() {
+  useTickerSnapshot(DEFAULT_PAIRS)
+
   return (
     <>
       <AppHeader />
@@ -41,14 +44,13 @@ export function App() {
 
         <section aria-labelledby="markets-heading">
           <SectionHeading id="markets-heading" title="Markets" />
-          <PairTable pairs={DEFAULT_PAIRS} />
+          <PairTableContainer pairs={DEFAULT_PAIRS} />
         </section>
       </main>
 
       <footer className={styles.footer}>
         <p className={styles.footerNote}>
-          Market data from the Binance public WebSocket API. Prices are indicative, not financial
-          advice.
+          Market data from Binance’s public API. Prices are indicative, not financial advice.
         </p>
       </footer>
     </>
