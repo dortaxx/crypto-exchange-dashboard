@@ -1,0 +1,17 @@
+.skeleton {
+  display: block;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton[data-shape='circle'] {
+  border-radius: 50%;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
