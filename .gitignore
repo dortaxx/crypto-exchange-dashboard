@@ -1,0 +1,16 @@
+# Dependencies and build output
+node_modules
+dist
+coverage
+
+# Local env files (Vite loads .env.local and .env.[mode].local)
+*.local
+
+# Logs
+*.log
+
+# Editor and OS files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
