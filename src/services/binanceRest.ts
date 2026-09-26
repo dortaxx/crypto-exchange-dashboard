@@ -1,4 +1,6 @@
+import { parsePrice } from '../domain/price'
 import type { Ticker } from '../domain/types'
+import { isRecord } from './guards'
 
 const REST_BASE_URL = 'https://data-api.binance.vision/api/v3'
 
@@ -6,10 +8,6 @@ type RawMiniTicker = {
   symbol: string
   lastPrice: string
   closeTime: number
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
 }
 
 function isRawMiniTicker(value: unknown): value is RawMiniTicker {
@@ -22,9 +20,8 @@ function isRawMiniTicker(value: unknown): value is RawMiniTicker {
 }
 
 function toTicker(raw: RawMiniTicker): Ticker | null {
-  const price = Number(raw.lastPrice)
-  if (!Number.isFinite(price) || price <= 0) return null
-  return { symbol: raw.symbol, price, updatedAt: raw.closeTime }
+  const price = parsePrice(raw.lastPrice)
+  return price === null ? null : { symbol: raw.symbol, price, updatedAt: raw.closeTime }
 }
 
 export async function fetchTickerSnapshot(
