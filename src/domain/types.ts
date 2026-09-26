@@ -12,3 +12,10 @@ export type Ticker = {
 }
 
 export type LoadStatus = 'loading' | 'ready' | 'error'
+
+export type ConnectionState =
+  | { status: 'connecting' }
+  | { status: 'connected' }
+  | { status: 'reconnecting'; attempt: number; retryInMs: number }
+  | { status: 'disconnected' }
+  | { status: 'error'; message: string }
