@@ -46,3 +46,15 @@
   text-transform: uppercase;
   color: var(--text-muted);
 }
+
+.aside {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+@media (max-width: 40rem) {
+  .source {
+    display: none;
+  }
+}

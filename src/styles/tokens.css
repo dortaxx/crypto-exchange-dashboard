@@ -38,6 +38,7 @@
   --accent-soft: #d6bac9;
   --up: #4baf84;
   --down: #f25c5c;
+  --warn: #f2c94c;
 }
 
 @media (prefers-color-scheme: light) {
@@ -55,5 +56,6 @@
     --accent-soft: #651947;
     --up: #1f7550;
     --down: #c42f2f;
+    --warn: #9a6b00;
   }
 }

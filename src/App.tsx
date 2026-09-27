@@ -5,6 +5,7 @@ import { SectionHeading } from './components/SectionHeading/SectionHeading'
 import { StatStrip } from './components/StatStrip/StatStrip'
 import { DEFAULT_PAIRS } from './config/pairs'
 import { AlertsContainer } from './containers/AlertsContainer'
+import { ConnectionStatusContainer } from './containers/ConnectionStatusContainer'
 import { PairTableContainer } from './containers/PairTableContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
@@ -18,11 +19,11 @@ const sessionStats = [
 
 export function App() {
   useTickerSnapshot(DEFAULT_PAIRS)
-  useMarketFeed(DEFAULT_PAIRS)
+  const { retry } = useMarketFeed(DEFAULT_PAIRS)
 
   return (
     <>
-      <AppHeader />
+      <AppHeader status={<ConnectionStatusContainer onRetry={retry} />} />
 
       <main className={styles.page}>
         <section className={styles.hero} aria-labelledby="page-title">

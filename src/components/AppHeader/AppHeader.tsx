@@ -1,6 +1,11 @@
+import type { ReactNode } from 'react'
 import styles from './AppHeader.module.css'
 
-export function AppHeader() {
+type AppHeaderProps = {
+  status: ReactNode
+}
+
+export function AppHeader({ status }: AppHeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
@@ -11,7 +16,10 @@ export function AppHeader() {
           </svg>
           Crypto Dashboard
         </p>
-        <p className={styles.source}>Binance spot · USDT</p>
+        <div className={styles.aside}>
+          <p className={styles.source}>Binance spot · USDT</p>
+          {status}
+        </div>
       </div>
     </header>
   )

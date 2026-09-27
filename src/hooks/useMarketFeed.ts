@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import type { Pair, Ticker } from '../domain/types'
 import { BinanceSocket } from '../services/binanceSocket'
 import { useMarketStore } from '../store/marketStore'
 
 const FLUSH_INTERVAL_MS = 250
 
-export function useMarketFeed(pairs: readonly Pair[]): void {
+export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
   const socketRef = useRef<BinanceSocket | null>(null)
 
   useEffect(() => {
@@ -38,4 +38,10 @@ export function useMarketFeed(pairs: readonly Pair[]): void {
   useEffect(() => {
     socketRef.current?.setSymbols(pairs.map((pair) => pair.symbol))
   }, [pairs])
+
+  const retry = useCallback(() => {
+    socketRef.current?.connect()
+  }, [])
+
+  return { retry }
 }
