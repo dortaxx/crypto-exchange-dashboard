@@ -1,6 +1,6 @@
 import { useCallback, useId, useState, type PointerEvent } from 'react'
 import { buildPriceChart, chartX, chartY, nearestPoint } from '../../domain/chart'
-import { formatPrice, formatShortTime, formatTime } from '../../domain/format'
+import { formatAxisPrice, formatPrice, formatShortTime, formatTime } from '../../domain/format'
 import type { Direction, PricePoint } from '../../domain/types'
 import styles from './PriceChart.module.css'
 
@@ -108,7 +108,7 @@ export function PriceChart({ points, startPrice, trend, label }: PriceChartProps
       <div className={styles.priceAxis} aria-hidden="true">
         {priceLabels.map((tick) => (
           <span key={tick} className={styles.priceLabel} style={{ top: `${chartY(frame, tick)}%` }}>
-            {formatPrice(tick)}
+            {formatAxisPrice(tick, chart.priceStep)}
           </span>
         ))}
         {last && lastY !== null && (

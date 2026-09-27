@@ -16,6 +16,12 @@ describe('roundPercent', () => {
     expect(roundPercent(1.9999999999999927)).toBe(2)
     expect(roundPercent(2.1449)).toBe(2.14)
   })
+
+  it('rounds halves away from zero, so a fall and a rise of the same size look the same', () => {
+    expect(roundPercent(1.9949999999999999)).toBe(2)
+    expect(roundPercent(-1.9949999999999999)).toBe(-2)
+    expect(roundPercent(-0.004)).toBe(0)
+  })
 })
 
 describe('checkAlert', () => {
@@ -32,6 +38,17 @@ describe('checkAlert', () => {
         changePercent: 2.14,
         triggeredAt: 1000,
       },
+    })
+  })
+
+  it('alerts on a fall that shows as -2.00%, just like the matching rise', () => {
+    expect(checkAlert('BTCUSDT', 'calm', priceMove(100_000, 98_005), 1000).alert).toMatchObject({
+      direction: 'down',
+      changePercent: -2,
+    })
+    expect(checkAlert('BTCUSDT', 'calm', priceMove(100_000, 101_995), 1000).alert).toMatchObject({
+      direction: 'up',
+      changePercent: 2,
     })
   })
 

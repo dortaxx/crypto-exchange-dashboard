@@ -1,3 +1,5 @@
+import { roundPercent } from './alertCheck'
+
 const withDecimals = (digits: number) =>
   new Intl.NumberFormat('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 
@@ -35,11 +37,30 @@ export function formatShortTime(timestamp: number): string {
 }
 
 export function formatPercent(percent: number): string {
-  return signedPercent.format(percent / 100)
+  return signedPercent.format(roundPercent(percent) / 100)
 }
 
 export function formatPrice(price: number): string {
   if (price >= 10) return twoDecimals.format(price)
   if (price >= 1) return fourDecimals.format(price)
   return sixDecimals.format(price)
+}
+
+const byDecimals = new Map<number, Intl.NumberFormat>()
+
+function priceDecimals(price: number): number {
+  if (price >= 10) return 2
+  if (price >= 1) return 4
+  return 6
+}
+
+export function formatAxisPrice(price: number, step: number): string {
+  const stepDecimals = Math.max(0, Math.ceil(-Math.log10(step) - 1e-9))
+  const digits = Math.min(8, Math.max(priceDecimals(price), stepDecimals))
+  let format = byDecimals.get(digits)
+  if (format === undefined) {
+    format = withDecimals(digits)
+    byDecimals.set(digits, format)
+  }
+  return format.format(price)
 }

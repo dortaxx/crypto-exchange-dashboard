@@ -21,6 +21,7 @@ export type PriceChartModel = {
   line: string
   area: string
   priceTicks: number[]
+  priceStep: number
   timeTicks: number[]
   timeStep: number
 }
@@ -61,6 +62,7 @@ export function buildPriceChart(
       return `${index === 0 ? 'M' : 'L'}${x},${y}`
     })
     .join('')
+  const priceStep = niceStep(frame.top - frame.bottom)
   const timeStep =
     TIME_STEPS.find((step) => (frame.end - frame.start) / step <= timeTickTarget) ??
     LONGEST_TIME_STEP
@@ -69,7 +71,8 @@ export function buildPriceChart(
     frame,
     line,
     area: `${line}L100,100L0,100Z`,
-    priceTicks: ticksBetween(frame.bottom, frame.top, niceStep(frame.top - frame.bottom)),
+    priceTicks: ticksBetween(frame.bottom, frame.top, priceStep),
+    priceStep,
     timeTicks: ticksBetween(frame.start, frame.end, timeStep),
     timeStep,
   }

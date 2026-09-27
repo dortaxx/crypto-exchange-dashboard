@@ -2,7 +2,8 @@ import { nextAlertZone, shouldAlert, type AlertZone } from './alerts'
 import type { MoveAlert, PairPrice } from './types'
 
 export function roundPercent(percent: number): number {
-  return Math.round(percent * 100) / 100
+  const rounded = Math.round((Math.abs(percent) + Number.EPSILON) * 100) / 100
+  return percent < 0 && rounded !== 0 ? -rounded : rounded
 }
 
 export function checkAlert(
