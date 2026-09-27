@@ -5,6 +5,7 @@ import { SectionHeading } from './components/SectionHeading/SectionHeading'
 import { DEFAULT_PAIRS } from './config/pairs'
 import { AlertsContainer } from './containers/AlertsContainer'
 import { ConnectionStatusContainer } from './containers/ConnectionStatusContainer'
+import { ConverterContainer } from './containers/ConverterContainer'
 import { PairTableContainer } from './containers/PairTableContainer'
 import { StatsContainer } from './containers/StatsContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
@@ -29,7 +30,7 @@ export function App() {
 
         <div className={styles.cards}>
           <Card titleId="converter-title" title="Converter">
-            <p className={styles.muted}>Available once live prices arrive.</p>
+            <ConverterContainer pairs={DEFAULT_PAIRS} />
           </Card>
           <Card titleId="alerts-title" title="Alerts">
             <AlertsContainer />

@@ -12,6 +12,12 @@ const signedPercent = new Intl.NumberFormat('en-US', {
   signDisplay: 'exceptZero',
 })
 
+const eightSignificant = new Intl.NumberFormat('en-US', { maximumSignificantDigits: 8 })
+
+export function formatAmount(amount: number): string {
+  return eightSignificant.format(amount)
+}
+
 const clockTime = new Intl.DateTimeFormat('en-GB', {
   hour: '2-digit',
   minute: '2-digit',

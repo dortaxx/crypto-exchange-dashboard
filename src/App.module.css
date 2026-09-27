@@ -34,12 +34,6 @@
   }
 }
 
-.muted {
-  margin-top: var(--space-1);
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-
 .footer {
   max-width: var(--page-max);
   margin-inline: auto;

@@ -14,6 +14,7 @@ import ltc from 'cryptocurrency-icons/svg/color/ltc.svg'
 import sol from 'cryptocurrency-icons/svg/color/sol.svg'
 import trx from 'cryptocurrency-icons/svg/color/trx.svg'
 import uni from 'cryptocurrency-icons/svg/color/uni.svg'
+import usdt from 'cryptocurrency-icons/svg/color/usdt.svg'
 import xlm from 'cryptocurrency-icons/svg/color/xlm.svg'
 import xrp from 'cryptocurrency-icons/svg/color/xrp.svg'
 
@@ -34,6 +35,7 @@ export const COIN_ICONS: Readonly<Record<string, string>> = {
   SOL: sol,
   TRX: trx,
   UNI: uni,
+  USDT: usdt,
   XLM: xlm,
   XRP: xrp,
 }
