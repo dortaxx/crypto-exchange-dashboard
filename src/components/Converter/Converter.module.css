@@ -64,53 +64,6 @@
   color: var(--down);
 }
 
-.picker {
-  position: relative;
-  display: inline-flex;
-  gap: var(--space-2);
-  align-items: center;
-}
-
-.select {
-  padding: var(--space-2) var(--space-6) var(--space-2) 0;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-  font-weight: 600;
-  appearance: none;
-  cursor: pointer;
-}
-
-.select:focus-visible {
-  outline: none;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-.picker:has(.select:focus-visible) {
-  outline: 2px solid var(--accent-soft);
-  outline-offset: 4px;
-  border-radius: var(--radius-sm);
-}
-
-.select option {
-  background: var(--surface);
-  color: var(--text);
-}
-
-.chevron {
-  position: absolute;
-  right: 0;
-  width: 0.875rem;
-  height: 0.875rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  pointer-events: none;
-}
-
 .swap {
   position: absolute;
   top: 50%;

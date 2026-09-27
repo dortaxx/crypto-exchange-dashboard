@@ -1,11 +1,8 @@
 import { useId } from 'react'
-import { CoinIcon } from '../CoinIcon/CoinIcon'
+import { AssetPicker, type AssetOption } from '../AssetPicker/AssetPicker'
 import styles from './Converter.module.css'
 
-export type AssetOption = {
-  code: string
-  name: string
-}
+export type { AssetOption }
 
 export type QuickAmount = {
   label: string
@@ -25,38 +22,6 @@ type ConverterProps = {
   onFromChange: (code: string) => void
   onToChange: (code: string) => void
   onSwap: () => void
-}
-
-type AssetSelectProps = {
-  label: string
-  value: string
-  assets: readonly AssetOption[]
-  onChange: (code: string) => void
-}
-
-function AssetSelect({ label, value, assets, onChange }: AssetSelectProps) {
-  return (
-    <span className={styles.picker}>
-      <CoinIcon asset={value} />
-      <select
-        className={styles.select}
-        aria-label={label}
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value)
-        }}
-      >
-        {assets.map((asset) => (
-          <option key={asset.code} value={asset.code}>
-            {asset.code}
-          </option>
-        ))}
-      </select>
-      <svg className={styles.chevron} viewBox="0 0 12 12" aria-hidden="true">
-        <path d="M3 4.5 6 7.5 9 4.5" />
-      </svg>
-    </span>
-  )
 }
 
 export function Converter({
@@ -98,7 +63,7 @@ export function Converter({
               }}
             />
           </label>
-          <AssetSelect label="Convert from" value={from} assets={assets} onChange={onFromChange} />
+          <AssetPicker label="Convert from" value={from} assets={assets} onChange={onFromChange} />
         </div>
 
         <button type="button" className={styles.swap} aria-label="Swap currencies" onClick={onSwap}>
@@ -114,7 +79,7 @@ export function Converter({
               {result ?? '—'}
             </output>
           </div>
-          <AssetSelect label="Convert to" value={to} assets={assets} onChange={onToChange} />
+          <AssetPicker label="Convert to" value={to} assets={assets} onChange={onToChange} />
         </div>
       </div>
 
