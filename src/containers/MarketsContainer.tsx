@@ -1,5 +1,6 @@
 import { useId, useState, type ComponentProps } from 'react'
 import { EmptyState } from '../components/EmptyState/EmptyState'
+import { focusAfterRemoval } from '../components/focusAfterRemoval'
 import { HiddenPairsPanel } from '../components/HiddenPairsPanel/HiddenPairsPanel'
 import { MarketsToolbar } from '../components/MarketsToolbar/MarketsToolbar'
 import { PairManager } from '../components/PairManager/PairManager'
@@ -40,6 +41,7 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
   const hiddenPanelId = useId()
   const pairsPanelId = useId()
   const pairsToggleId = useId()
+  const searchId = useId()
 
   const tracked = new Set(pairs.map((pair) => pair.symbol))
   const shown = visiblePairs(pairs, { hidden, favorites, view })
@@ -85,12 +87,24 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
     }
 
     const title = `No ${view === 'favorites' ? 'favorites' : 'pairs'} match “${query.trim()}”`
-    const hiddenMatches = hiddenPairs.filter((pair) => matchesSearch(pair, query))
+    const hiddenMatches = hiddenPairs.filter(
+      (pair) => matchesSearch(pair, query) && (view === 'all' || favorites.includes(pair.symbol)),
+    )
     if (hiddenMatches.length > 0) {
       return {
         title,
         message: `Hidden: ${hiddenMatches.map((pair) => pair.name).join(', ')}.`,
         action: { label: 'Show hidden pairs', onClick: () => setPanel('hidden') },
+      }
+    }
+    const notFavorite = pairs.find(
+      (pair) => !favorites.includes(pair.symbol) && matchesSearch(pair, query),
+    )
+    if (notFavorite && view === 'favorites') {
+      return {
+        title,
+        message: `${notFavorite.name} isn’t in your favorites.`,
+        action: { label: 'Show all pairs', onClick: () => setView('all') },
       }
     }
     const suggestion = PAIR_CATALOG.find(
@@ -110,6 +124,16 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
     }
   }
   const empty = emptyState()
+  const emptyWithFocus = empty && {
+    ...empty,
+    action: empty.action && {
+      ...empty.action,
+      onClick: () => {
+        empty.action?.onClick()
+        focusAfterRemoval(null, '', 0, document.getElementById(searchId))
+      },
+    },
+  }
 
   return (
     <section aria-labelledby="markets-heading">
@@ -123,6 +147,7 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
         pairsOpen={panel === 'pairs'}
         pairsPanelId={pairsPanelId}
         pairsToggleId={pairsToggleId}
+        searchId={searchId}
         query={query}
         onViewChange={setView}
         onToggleHidden={() => {
@@ -157,7 +182,7 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
           onRemove={removePair}
         />
       )}
-      {empty === null ? (
+      {emptyWithFocus === null ? (
         <PairTable
           pairs={rows}
           prices={prices}
@@ -168,9 +193,10 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
           sortKey={sortKey}
           sortDirection={sortDirection}
           onSort={setSort}
+          fallbackFocusId={searchId}
         />
       ) : (
-        <EmptyState {...empty} />
+        <EmptyState {...emptyWithFocus} />
       )}
       <p className="visually-hidden" role="status">
         {searching && `${rows.length} ${rows.length === 1 ? 'pair' : 'pairs'} found`}

@@ -26,3 +26,10 @@ export function sortPairs(
     return sign * (left - right) || byName
   })
 }
+
+export function keepOrder(pairs: readonly Pair[], order: readonly string[]): Pair[] {
+  const rank = new Map(order.map((symbol, index) => [symbol, index]))
+  return [...pairs].sort(
+    (a, b) => (rank.get(a.symbol) ?? order.length) - (rank.get(b.symbol) ?? order.length),
+  )
+}

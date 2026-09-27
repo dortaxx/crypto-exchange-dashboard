@@ -50,10 +50,6 @@
   }
 
   .price,
-  .missing {
-    color: var(--text-muted);
-  }
-
   .change {
     font-size: var(--text-sm);
   }
@@ -63,6 +59,10 @@
     gap: 0;
   }
 
+  .name {
+    white-space: normal;
+  }
+
   .base {
     font-size: var(--text-xs);
   }
@@ -70,6 +70,10 @@
 
 .numeric {
   text-align: right;
+}
+
+.missing {
+  color: var(--text-muted);
 }
 
 .price {
@@ -106,14 +110,14 @@
 
 @keyframes flash-up {
   from {
-    color: color-mix(in srgb, var(--up) 45%, white);
+    color: color-mix(in srgb, var(--up) 45%, var(--flash-base));
     text-shadow: 0 0 10px color-mix(in srgb, var(--up) 75%, transparent);
   }
 }
 
 @keyframes flash-down {
   from {
-    color: color-mix(in srgb, var(--down) 45%, white);
+    color: color-mix(in srgb, var(--down) 45%, var(--flash-base));
     text-shadow: 0 0 10px color-mix(in srgb, var(--down) 75%, transparent);
   }
 }

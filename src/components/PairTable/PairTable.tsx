@@ -1,4 +1,5 @@
-import { useRef } from 'react'
+import { useRef, useState, type FocusEvent } from 'react'
+import { keepOrder } from '../../domain/sortPairs'
 import type { LoadStatus, Pair, PairPrice, SortDirection, SortKey } from '../../domain/types'
 import { focusAfterRemoval } from '../focusAfterRemoval'
 import { PairRow } from '../PairRow/PairRow'
@@ -14,6 +15,7 @@ type PairTableProps = {
   sortKey: SortKey
   sortDirection: SortDirection
   onSort: (key: SortKey) => void
+  fallbackFocusId: string
 }
 
 const COLUMNS: readonly { key: SortKey; label: string; numeric: boolean }[] = [
@@ -32,8 +34,18 @@ export function PairTable({
   sortKey,
   sortDirection,
   onSort,
+  fallbackFocusId,
 }: PairTableProps) {
   const bodyRef = useRef<HTMLTableSectionElement>(null)
+  const inside = useRef({ pointer: false, focus: false })
+  const [frozenOrder, setFrozenOrder] = useState<readonly string[] | null>(null)
+  const rows = frozenOrder === null ? pairs : keepOrder(pairs, frozenOrder)
+
+  const setInside = (key: 'pointer' | 'focus', value: boolean) => {
+    inside.current[key] = value
+    const active = inside.current.pointer || inside.current.focus
+    setFrozenOrder((current) => (active ? (current ?? pairs.map((pair) => pair.symbol)) : null))
+  }
 
   return (
     <>
@@ -83,8 +95,25 @@ export function PairTable({
               </th>
             </tr>
           </thead>
-          <tbody ref={bodyRef}>
-            {pairs.map((pair, index) => (
+          <tbody
+            ref={bodyRef}
+            onPointerEnter={() => {
+              setInside('pointer', true)
+            }}
+            onPointerLeave={() => {
+              setInside('pointer', false)
+            }}
+            onFocus={() => {
+              setInside('focus', true)
+            }}
+            onBlur={(event: FocusEvent<HTMLTableSectionElement>) => {
+              const next = event.relatedTarget
+              if (!(next instanceof Node) || !event.currentTarget.contains(next)) {
+                setInside('focus', false)
+              }
+            }}
+          >
+            {rows.map((pair, index) => (
               <PairRow
                 key={pair.symbol}
                 pair={pair}
@@ -94,11 +123,21 @@ export function PairTable({
                 loadingDelayMs={index * 120}
                 onToggleFavorite={(symbol) => {
                   onToggleFavorite(symbol)
-                  focusAfterRemoval(bodyRef.current, '[data-action="favorite"]', index)
+                  focusAfterRemoval(
+                    bodyRef.current,
+                    '[data-action="favorite"]',
+                    index,
+                    document.getElementById(fallbackFocusId),
+                  )
                 }}
                 onHide={(symbol) => {
                   onHide(symbol)
-                  focusAfterRemoval(bodyRef.current, '[data-action="hide"]', index)
+                  focusAfterRemoval(
+                    bodyRef.current,
+                    '[data-action="hide"]',
+                    index,
+                    document.getElementById(fallbackFocusId),
+                  )
                 }}
               />
             ))}

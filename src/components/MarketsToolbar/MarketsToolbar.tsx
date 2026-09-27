@@ -10,6 +10,7 @@ type MarketsToolbarProps = {
   pairsOpen: boolean
   pairsPanelId: string
   pairsToggleId: string
+  searchId: string
   query: string
   onViewChange: (view: ViewMode) => void
   onToggleHidden: () => void
@@ -26,6 +27,7 @@ export function MarketsToolbar({
   pairsOpen,
   pairsPanelId,
   pairsToggleId,
+  searchId,
   query,
   onViewChange,
   onToggleHidden,
@@ -65,6 +67,7 @@ export function MarketsToolbar({
         </svg>
         <span className="visually-hidden">Search pairs</span>
         <input
+          id={searchId}
           type="search"
           className={styles.searchInput}
           placeholder="Search name or symbol"

@@ -39,6 +39,7 @@
   --up: light-dark(#1f7550, #4baf84);
   --down: light-dark(#c42f2f, #f25c5c);
   --warn: light-dark(#9a6b00, #f2c94c);
+  --flash-base: light-dark(#190100, #ffffff);
 }
 
 :root[data-theme='light'] {

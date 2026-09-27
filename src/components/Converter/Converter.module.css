@@ -161,4 +161,9 @@
   .result {
     font-size: var(--text-md);
   }
+
+  .result {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }

@@ -2,6 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react'
 import { usePreferencesStore } from '../store/preferencesStore'
 
 const DARK_QUERY = '(prefers-color-scheme: dark)'
+const BAR_COLORS = { light: '#f8f2f6', dark: '#190100' } as const
 
 function subscribeToSystemTheme(onChange: () => void): () => void {
   const query = window.matchMedia(DARK_QUERY)
@@ -25,6 +26,11 @@ export function useTheme(): { theme: 'light' | 'dark'; toggleTheme: () => void }
     const root = document.documentElement
     if (choice === 'system') root.removeAttribute('data-theme')
     else root.setAttribute('data-theme', choice)
+
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+      const scheme = meta.media.includes('dark') ? 'dark' : 'light'
+      meta.content = BAR_COLORS[choice === 'system' ? scheme : choice]
+    }
   }, [choice])
 
   return {

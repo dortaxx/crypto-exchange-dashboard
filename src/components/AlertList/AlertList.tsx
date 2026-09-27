@@ -18,9 +18,10 @@ type AlertListProps = {
 
 export function AlertList({ alerts, onDismiss }: AlertListProps) {
   const listRef = useRef<HTMLUListElement>(null)
+  const regionRef = useRef<HTMLDivElement>(null)
 
   return (
-    <div aria-live="polite">
+    <div ref={regionRef} tabIndex={-1} aria-live="polite">
       {alerts.length === 0 ? (
         <>
           <p className={styles.empty}>No alerts yet</p>
@@ -49,7 +50,12 @@ export function AlertList({ alerts, onDismiss }: AlertListProps) {
                 aria-label={`Dismiss: ${alert.message}`}
                 onClick={() => {
                   onDismiss(alert.id)
-                  focusAfterRemoval(listRef.current, '[data-action="dismiss"]', index)
+                  focusAfterRemoval(
+                    listRef.current,
+                    '[data-action="dismiss"]',
+                    index,
+                    regionRef.current,
+                  )
                 }}
               >
                 ×

@@ -3,6 +3,7 @@ import { formatPercent } from '../domain/format'
 import { topMovers, type Mover } from '../domain/stats'
 import type { Pair } from '../domain/types'
 import { useMarketStore } from '../store/marketStore'
+import { usePreferencesStore } from '../store/preferencesStore'
 
 type StatsContainerProps = {
   pairs: readonly Pair[]
@@ -12,10 +13,11 @@ export function StatsContainer({ pairs }: StatsContainerProps) {
   const prices = useMarketStore((state) => state.prices)
   const alertCount = useMarketStore((state) => state.alerts.length)
   const failed = useMarketStore((state) => state.snapshotStatus === 'error')
+  const hidden = usePreferencesStore((state) => state.hidden)
   const hasPrices = Object.keys(prices).length > 0
   const { gainer, loser } = topMovers(
     prices,
-    pairs.map((pair) => pair.symbol),
+    pairs.map((pair) => pair.symbol).filter((symbol) => !hidden.includes(symbol)),
   )
 
   const describeMover = (mover: Mover | null) => {
