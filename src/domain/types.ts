@@ -31,6 +31,7 @@ export type PairPrice = {
   changePercent: number
   direction: Direction
   updatedAt: number
+  history: readonly number[]
 }
 
 export type ConnectionState =

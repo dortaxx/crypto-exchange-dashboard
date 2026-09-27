@@ -8,6 +8,7 @@ const quoted = (price: number): PairPrice => ({
   changePercent: 0,
   direction: 'flat',
   updatedAt: 1,
+  history: [],
 })
 
 const prices = { BTCUSDT: quoted(84_000), ETHUSDT: quoted(2_625) }

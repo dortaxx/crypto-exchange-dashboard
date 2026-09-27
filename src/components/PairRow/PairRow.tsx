@@ -3,6 +3,7 @@ import { formatPercent, formatPrice } from '../../domain/format'
 import type { Pair, PairPrice } from '../../domain/types'
 import { CoinIcon } from '../CoinIcon/CoinIcon'
 import { Skeleton } from '../Skeleton/Skeleton'
+import { Sparkline } from '../Sparkline/Sparkline'
 import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './PairRow.module.css'
 
@@ -76,7 +77,11 @@ export function PairRow({
         )}
       </td>
       <td className={styles.trend}>
-        <Skeleton width="5rem" height="1.5rem" delayMs={loadingDelayMs} />
+        {price === undefined || price.history.length < 2 ? (
+          <Skeleton width="5rem" height="1.5rem" delayMs={loadingDelayMs} />
+        ) : (
+          <Sparkline values={price.history} label={`${pair.name} price trend this session`} />
+        )}
       </td>
       <td className={styles.actions}>
         <button

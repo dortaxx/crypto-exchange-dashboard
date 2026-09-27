@@ -8,6 +8,7 @@ const at = (changePercent: number): PairPrice => ({
   changePercent,
   direction: 'flat',
   updatedAt: 1,
+  history: [],
 })
 
 describe('topMovers', () => {
