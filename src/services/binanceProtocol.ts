@@ -10,8 +10,6 @@ export type SocketMessage =
   | { kind: 'error'; id: number | null; message: string }
   | { kind: 'ignored' }
 
-type RequestMethod = 'SUBSCRIBE' | 'UNSUBSCRIBE'
-
 const IGNORED: SocketMessage = { kind: 'ignored' }
 
 // Binance acknowledges upper-case stream names but never sends data for them.
@@ -20,11 +18,15 @@ export function toStreamName(symbol: string): string {
 }
 
 export function buildRequest(
-  method: RequestMethod,
+  method: 'SUBSCRIBE' | 'UNSUBSCRIBE',
   symbols: readonly string[],
   id: number,
 ): string {
   return JSON.stringify({ method, params: symbols.map(toStreamName), id })
+}
+
+export function buildListRequest(id: number): string {
+  return JSON.stringify({ method: 'LIST_SUBSCRIPTIONS', id })
 }
 
 export function parseSocketMessage(data: unknown): SocketMessage {
