@@ -16,21 +16,21 @@ A real-time cryptocurrency dashboard built with React and TypeScript. It streams
 | 4. Calculator                  | Convert between any tracked coin and USDT at live prices. Select, swap, quick amounts and validation for empty, negative, invalid and `e` notation input.                                                            |
 | 5. Favorites                   | Star a pair and switch between All and Favorites. Saved in `localStorage`.                                                                                                                                           |
 | 6. Hide currencies             | Hide a pair, then view and restore hidden pairs one by one or all at once. Saved in `localStorage`.                                                                                                                  |
-| 7. Search and sorting          | Search by name, symbol or pair (`bit`, `BTC`, `btc/usdt`). Sort by name, current price or % change since open.                                                                                                       |
-| 8. WebSocket state             | A header badge shows Connecting, Connected, Reconnecting with the attempt number, Offline, and Connection lost with a Retry button. Automatic reconnect with backoff, and full cleanup on unmount.                   |
+| 7. Search and sorting          | Search by name, symbol or pair (`bit`, `BTC`, `btc/usdt`). Sort by name, current price or % change since open. Rows don't jump while your pointer or keyboard focus is in the table.                                 |
+| 8. WebSocket state             | A header badge shows Connecting, Connected, Reconnecting (try n), Disconnected (offline), and Connection lost with a Retry button. Automatic reconnect with backoff, and full cleanup on unmount.                    |
 | 9. UI states                   | Loading skeletons, connected, reconnecting, disconnected, error, empty search, empty favorites and all pairs hidden.                                                                                                 |
 | Bonus: session chart           | A price chart per pair built from data collected this session, with price and time axes, the opening price as a dashed line and a hover or touch readout.                                                            |
 | Bonus: add / remove pairs      | "Edit pairs" lets you follow any of 18 supported coins. The list is saved.                                                                                                                                           |
 | Bonus: subscribe / unsubscribe | Changing pairs sends `SUBSCRIBE` / `UNSUBSCRIBE` diffs on the open socket, paced to stay under Binance's rate limit. It never reconnects.                                                                            |
 | Bonus: price targets           | Choose a coin and a target price ("alert me when BTC rises above 90,000"). Targets are saved and fire once.                                                                                                          |
 | Bonus: light / dark theme      | Follows the system by default. The toggle choice is saved and applied before first paint, so there's no flash.                                                                                                       |
-| Bonus: unit tests              | 141 Vitest tests, including the calculator, % change, alert rules, the socket's reconnect logic, sorting, search and stores.                                                                                         |
+| Bonus: unit tests              | 151 Vitest tests, including the calculator, % change, alert rules, the socket's reconnect logic, sorting, search and stores.                                                                                         |
 
 The layout is responsive down to 320px wide. Every control is keyboard accessible and has an accessible name. Focus moves to a neighbouring control when the one you used disappears (hide, dismiss, restore), and live prices never trigger screen-reader announcements on their own.
 
 ## Getting started
 
-Requirements: **Node.js 22.12+ or 24** (see `.nvmrc`) and npm.
+Requirements: **Node.js 22.13+ or 24** (see `.nvmrc`) and npm.
 
 ```bash
 npm install
@@ -88,10 +88,10 @@ Binance WebSocket ──► BinanceSocket ──► useMarketFeed ──(batch e
   (miniTicker)        reconnect, watchdog,     latest price per pair,          prices, alerts,      (selectors)     (props)
                       subscribe diffs          checks price targets            connection state
 Binance REST  ──► useTickerSnapshot ─────────────────────────────────────────► marketStore
-localStorage  ◄──► preferencesStore (pairs, favorites, hidden, sort, targets, theme) ◄──► containers
+localStorage  ◄──► preferencesStore (pairs, favorites, hidden, view, sort, targets, theme) ◄──► containers
 ```
 
-- **`BinanceSocket`** has no React in it. It owns the connection lifecycle: connect, subscribe, reconnect with exponential backoff and full jitter, a watchdog that checks a quiet connection is still alive before replacing it, and pausing while the browser is offline. It exposes only `setSymbols`, `connect`, `disconnect` and two listener methods. Its network status, randomness and `WebSocket` constructor are injectable, so the tests drive it with fakes and fake timers.
+- **`BinanceSocket`** has no React in it. It owns the connection lifecycle: connect, subscribe, reconnect with exponential backoff and full jitter, a watchdog that checks a quiet connection is still alive before replacing it, and pausing while the browser is offline. Its public methods are `connect`, `disconnect`, `setSymbols`, `getState` and two listener methods (`onStateChange`, `onTicker`). Its network status, randomness and `WebSocket` constructor are injectable, so the tests drive it with fakes and fake timers.
 - **`useMarketFeed`** is the only place the socket meets React. It creates one socket for the app's lifetime, sends pair changes to `setSymbols`, and cleans up everything (timer, listeners, socket) on unmount.
 - **Two stores.** Live prices change several times a second and must never be written to `localStorage`. Preferences change rarely and must survive a reload. Keeping them apart means `persist` never serialises price data.
 - **Layers are enforced, not just a convention.** ESLint's `no-restricted-imports` fails the lint if a component imports a store, service, hook or container, or if `domain/` or `services/` import React or a store.
@@ -105,7 +105,7 @@ The short version is below. Every decision, with the alternatives and trade-offs
 - **±2% is inclusive**, measured on the value as displayed (rounded to 2 decimals). After an alert, a pair must calm back inside ±1.5% before it can alert again. This stops a price hovering around 2% from spamming alerts.
 - **Alerts are muted for hidden pairs.** You asked not to see them. Price targets you set explicitly still fire.
 - **Updates are batched** into one store write every 250ms (latest price wins), so the UI renders at most 4 times per second however many messages arrive.
-- **Reconnect** uses exponential backoff with full jitter (1s, 2s, 4s … capped at 30s). After 10 failed attempts it stops and shows a Retry button instead of retrying forever.
+- **Reconnect** uses exponential backoff with full jitter (1s, 2s, 4s … capped at 30s). After 10 failed reconnect attempts it stops and shows a Retry button instead of retrying forever.
 - **Conversion goes through USDT**, with USDT priced at exactly 1.
 - **The pair catalog is fixed** (18 USDT pairs with names and icons). The Binance stream only sends symbols, so names for search come from this catalog.
 - **Saved preferences are validated** when loaded. Unknown symbols, wrong types or corrupted JSON fall back to defaults instead of crashing the app.

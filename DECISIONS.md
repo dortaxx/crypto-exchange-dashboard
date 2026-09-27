@@ -8,7 +8,7 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 - **Chosen:** `wss://data-stream.binance.vision/ws` with one `<symbol>@miniTicker` stream per pair.
 - **Alternatives:** `@trade` (one message per trade, often dozens per second for BTC), `@ticker` (a larger payload with fields we don't use), or `@bookTicker`, which is best bid/ask rather than a last price.
-- **Why:** `miniTicker` sends the last price (`c`) and event time (`E`) about once per second per pair. That is exactly what a price board needs, at a predictable rate. `data-stream.binance.vision` is Binance's public market-data-only host.
+- **Why:** `miniTicker` sends the last price (`c`) and event time (`E`) at most once per second per pair, and only in seconds when the pair traded, so busy coins update about every second and quiet ones less often. That is what a price board needs, without the flood of individual trades. `data-stream.binance.vision` is Binance's public market-data-only host.
 - **Gotcha:** stream names must be **lowercase**. Binance acknowledges `BTCUSDT@miniTicker` but never sends data for it, so `toStreamName` lowercases.
 
 ### 2. One socket, with `SUBSCRIBE` / `UNSUBSCRIBE` messages
@@ -26,7 +26,7 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 ### 4. Reconnect: exponential backoff with full jitter, then give up
 
-- **Chosen:** the delay is `random(0, min(30s, 1s × 2^(attempt-1)))`. After 10 failed attempts the state becomes `error` and the header shows **Retry**.
+- **Chosen:** the delay is `random(0, min(30s, 1s × 2^(attempt-1)))`. After 10 failed reconnect attempts the state becomes `error` and the header shows **Retry**.
 - **Alternatives:** a fixed delay; backoff without jitter; retrying forever.
 - **Why:** backoff avoids hammering a server that is down, and jitter stops many clients from reconnecting in lockstep. Giving up after 10 tries is more honest than a spinner that never ends, and Retry hands control back to the user.
 - **Detail:** the attempt counter resets on the **first price message**, not on `open`. A socket that opens but never delivers data would otherwise reset the counter each time and retry quickly forever.
@@ -40,7 +40,8 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 - **Chosen:** if nothing arrives for 10 seconds while pairs are subscribed, the socket sends `LIST_SUBSCRIPTIONS`. Any reply (a price, an ack or an error) proves the connection is alive and restarts the timer. Only if nothing answers within 5 more seconds is the socket treated as dead and replaced.
 - **Alternatives:** drop the socket after N seconds of silence; rely on `onclose` alone.
-- **Why:** a half-open TCP connection (laptop sleep, Wi-Fi change) can stay "open" without delivering anything, and `onclose` may never fire. Binance also closes every connection after 24 hours. But `miniTicker` only sends when a price changes: a live test showed ETC sending 2 messages in 40 seconds. A plain silence timer would keep killing healthy connections for quiet coins. Asking before hanging up separates "quiet" from "dead".
+- **Why:** a half-open TCP connection (laptop sleep, Wi-Fi change) can stay "open" without delivering anything, and `onclose` may never fire. Binance also closes every connection after 24 hours. But `miniTicker` only sends in seconds when the pair traded (the price in a message is often unchanged): a live test showed ETC sending 2 messages in 40 seconds. A plain silence timer would keep killing healthy connections for quiet coins. Asking before hanging up separates "quiet" from "dead".
+- **Handshake timeout:** the same 10 seconds also limits how long a new socket may stay in the connecting stage. A network that silently drops traffic would otherwise leave it "connecting" for minutes before the browser gives up, so the retry count would crawl.
 
 ### 7. Offline / online events
 
@@ -71,6 +72,7 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 - **Chosen:** `persist`'s `merge` passes the saved JSON through `sanitizePreferences`. It keeps only known symbols, removes duplicates, checks every enum and price target, and falls back to defaults for anything else. Favorites, hidden pairs and targets for pairs that are no longer followed are dropped.
 - **Why:** `localStorage` is user-editable and survives app updates. A corrupted or old value must never crash the app or subscribe to a symbol that doesn't exist.
+- **Several tabs:** `persist` writes the whole preferences object on every change, so a second open tab would overwrite the first tab's changes with its stale copy. A `storage` event listener (`useCrossTabPreferences`) reloads the preferences whenever another tab saves them.
 
 ### 12. Containers vs presentational components, enforced by lint
 
@@ -90,15 +92,15 @@ Each entry covers what was chosen, what else was considered, and why. The README
 - **Chosen:** alert at |change| ≥ 2% (inclusive). Once a pair has alerted, it must return inside **±1.5%** before it can alert again. Going straight from +2.5% to −2.5% is a new alert, because the direction changed.
 - **Alternatives:** alert again every time the price is outside 2%; re-arm as soon as the price is back under 2%.
 - **Why:** the brief forbids duplicate alerts while a pair stays beyond the threshold. Without a gap between the "fire" and "re-arm" levels, a price oscillating around 2.00% would alert on every tick.
-- **Detail:** the check uses the change **rounded to 2 decimals, as shown on screen**. Floating point makes `2.5 → 2.55` equal `1.9999999999999927%`. Without rounding, the screen would show "+2.00%" but no alert would fire.
+- **Detail:** the check uses the change **rounded to 2 decimals**, and the screen shows that same rounded number (`formatPercent` calls `roundPercent`), so what you see and what is checked can never disagree. Floating point makes `2.5 → 2.55` equal `1.9999999999999927%`, and halves round away from zero, so −1.995% becomes −2.00% exactly like +1.995% becomes +2.00%.
 
 ### 15. Hidden pairs don't raise ±2% alerts
 
-- **Why:** hiding means "I don't want to see this". Their prices keep updating, so restoring a pair is instant and its baseline stays correct. Price targets are explicit requests, so they still fire for hidden pairs.
+- **Why:** hiding means "I don't want to see this". Hidden pairs are also left out of the top gainer and loser stats. Their prices keep updating, so restoring a pair is instant and its baseline stays correct. Price targets are explicit requests, so they still fire for hidden pairs.
 
 ### 16. Hide vs remove
 
-- **Hide** (§6) keeps the pair subscribed and restorable, and is saved. **Remove** (Edit pairs) unsubscribes it, forgets its data, and drops its favorite, hidden and target entries.
+- **Hide** (brief requirement 6) keeps the pair subscribed and restorable, and is saved. **Remove** (Edit pairs) unsubscribes it, forgets its data, and drops its favorite, hidden and target entries.
 - **Why:** they solve different problems, a temporary declutter versus changing what you follow. Remove lives in a separate panel so it can't be clicked by accident next to hide. At least one pair always stays followed.
 
 ### 17. Converter goes through USDT
@@ -108,7 +110,7 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 ### 18. Own number parser, text input
 
-- **Chosen:** `<input type="text" inputMode="decimal">` with `parseAmount`, which accepts digits with one `.` or `,` and rejects signs, negatives, exponents (`1e5`) and anything else, with a specific message for each.
+- **Chosen:** `<input type="text" inputMode="decimal">` with `parseAmount`, which accepts digits with one `.` or `,` and rejects signs, exponents (`1e5`), repeated separators, input over 18 characters and anything else. Negatives get their own message ("Amounts can’t be negative."); every other invalid input says "Enter a number, like 0.5". An empty field is not an error, the result just shows "—".
 - **Alternatives:** `<input type="number">`.
 - **Why:** number inputs accept `e`, `+` and `-`, return an empty string for invalid text instead of reporting it, and behave differently across browsers. Accepting `,` supports locales where it is the decimal separator.
 
@@ -131,7 +133,7 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 ### 21. Theme with `light-dark()` and a pre-paint script
 
-- **Chosen:** each colour token is defined once as `light-dark(light, dark)`. Switching theme only sets `color-scheme` on `<html>`. Without a saved choice, it follows the system. A few lines of inline script in `index.html` read the saved theme and set it before React loads.
+- **Chosen:** each themed colour token is defined once as `light-dark(light, dark)` (the accent is the same in both themes). Switching theme sets `data-theme="light"` or `"dark"` on `<html>` (or removes it for "system"), and two CSS rules turn that into `color-scheme`, which every `light-dark()` token follows. The browser's `theme-color` bar is updated to match. Without a saved choice, it follows the system. A few lines of inline script in `index.html` read the saved theme and set it before React loads.
 - **Alternatives:** duplicate token blocks for `[data-theme]` and the media query; applying the theme only from React.
 - **Why:** there's a single source of truth for every colour. Without the pre-paint script, a light-theme user would see a dark flash on every reload while React loads.
 
@@ -145,13 +147,14 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 ### 24. Status labels follow the brief's wording
 
-- The badge reads **Connected**, **Reconnecting (try n)…**, **Offline** (the browser has no network), **Connecting…**, and **Connection lost** + **Retry** once the socket has given up. The first three are the brief's Connected / Reconnecting / Disconnected states. "Offline" is the disconnected state named after its cause, because it resumes on its own when the network returns.
+- The badge reads **Connecting…** (first load), **Connected**, **Reconnecting (try n)…** (for the whole retry, including while the new socket is opening), **Disconnected (offline)** when the browser has no network, and **Connection lost** + **Retry** once the socket has given up. These are the brief's Connected / Reconnecting / Disconnected states, plus the error state.
 - On phones, the wordmark next to the logo is visually hidden (screen readers still read it) and the letter spacing tightens, so every state, including Retry, fits in 320px.
 
 ### 25. Screen readers and focus
 
-- Live prices update several times a second, so they are **not** in live regions. Otherwise a screen reader would talk non-stop. Only things the user caused are announced: validation errors, the number of search results, connection changes and new alerts.
-- When the control you used disappears (hiding a row, dismissing an alert, removing a target, restoring the last hidden pair), focus moves to the same control in the next row, or to a sensible neighbour, instead of falling back to the top of the page.
+- Live prices update several times a second, so they are **not** in live regions. Otherwise a screen reader would talk non-stop. What is announced: validation errors, the number of search results, connection state changes, new alerts, and the loading or error message.
+- When the control you used disappears (hiding a row, dismissing an alert, removing a target, restoring the last hidden pair), focus moves to the same control in the next row, or to a sensible neighbour, instead of falling back to the top of the page. If the whole list disappears, focus goes to the search box (markets), the alerts area, or the status badge (after Retry).
+- **Rows don't jump while you use them.** When sorted by price or change, the order is frozen while the pointer or keyboard focus is inside the table body and catches up as soon as you leave. Otherwise a live re-sort could move a row away just as you click its star, and moving a focused row makes the browser drop keyboard focus.
 
 ## Tooling
 
