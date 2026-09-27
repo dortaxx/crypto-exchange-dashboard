@@ -33,8 +33,6 @@
 }
 
 .price {
-  padding: 0.125rem 0.375rem;
-  border-radius: var(--radius-sm);
   font-family: var(--font-figures);
   font-weight: 500;
 }
@@ -68,13 +66,15 @@
 
 @keyframes flash-up {
   from {
-    background-color: color-mix(in srgb, var(--up) 30%, transparent);
+    color: color-mix(in srgb, var(--up) 45%, white);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--up) 75%, transparent);
   }
 }
 
 @keyframes flash-down {
   from {
-    background-color: color-mix(in srgb, var(--down) 30%, transparent);
+    color: color-mix(in srgb, var(--down) 45%, white);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--down) 75%, transparent);
   }
 }
 
