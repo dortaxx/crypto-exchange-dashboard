@@ -25,7 +25,7 @@ describe('describeConnection', () => {
 
   it('disconnected because the browser is offline', () => {
     expect(describeConnection({ status: 'disconnected', reason: 'offline' })).toEqual({
-      label: 'Offline',
+      label: 'Disconnected (offline)',
       tone: 'off',
     })
   })

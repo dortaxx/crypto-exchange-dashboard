@@ -223,6 +223,20 @@ describe('reconnecting', () => {
     ])
   })
 
+  it('keeps saying Reconnecting while the retry socket is opening, not Connecting', () => {
+    const { phone, latestSocket } = setup()
+    phone.setSymbols(['BTCUSDT'])
+    phone.connect()
+    latestSocket().simulateOpen()
+    latestSocket().simulateDrop()
+
+    vi.advanceTimersByTime(1_000)
+    expect(phone.getState()).toEqual({ status: 'reconnecting', attempt: 1, retryInMs: 0 })
+
+    latestSocket().simulateOpen()
+    expect(phone.getState()).toEqual({ status: 'connected' })
+  })
+
   it('waits longer after each failed attempt and gives up after the limit', () => {
     const { phone, latestSocket } = setup({ maxAttempts: 3 })
     phone.connect()
@@ -306,7 +320,7 @@ describe('closing on purpose', () => {
 
     first?.simulateOpen()
     first?.simulateDrop()
-    vi.advanceTimersByTime(60_000)
+    vi.advanceTimersByTime(5_000)
 
     expect(FakeSocket.instances).toHaveLength(2)
     expect(phone.getState()).toEqual({ status: 'connecting' })
@@ -373,6 +387,31 @@ describe('watchdog', () => {
   })
 })
 
+describe('slow handshakes', () => {
+  it('gives up on a socket that never finishes connecting and retries', () => {
+    const { phone, latestSocket } = setup()
+    phone.connect()
+    const stuck = latestSocket()
+
+    vi.advanceTimersByTime(10_000)
+
+    expect(stuck.closedWith).toEqual({ code: 4000, reason: 'Connection timed out' })
+    expect(phone.getState()).toMatchObject({ status: 'reconnecting', attempt: 1 })
+  })
+
+  it('does not time out a socket that connected in time', () => {
+    const { phone, latestSocket } = setup()
+    phone.connect()
+    vi.advanceTimersByTime(3_000)
+    latestSocket().simulateOpen()
+
+    vi.advanceTimersByTime(60_000)
+
+    expect(phone.getState()).toEqual({ status: 'connected' })
+    expect(FakeSocket.instances).toHaveLength(1)
+  })
+})
+
 describe('offline', () => {
   it('stops and waits while the browser is offline, then reconnects when it comes back', () => {
     const { phone, net, latestSocket } = setup()
@@ -386,7 +425,7 @@ describe('offline', () => {
 
     net.goOnline()
     expect(FakeSocket.instances).toHaveLength(2)
-    expect(phone.getState()).toEqual({ status: 'connecting' })
+    expect(phone.getState()).toEqual({ status: 'reconnecting', attempt: 1, retryInMs: 0 })
   })
 
   it('waits for the network when connect() is called offline', () => {

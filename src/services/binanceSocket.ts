@@ -108,7 +108,7 @@ export class BinanceSocket {
       this.setState({ status: 'disconnected', reason: 'offline' })
       return
     }
-    this.open()
+    this.open('connect')
   }
 
   disconnect(): void {
@@ -119,10 +119,16 @@ export class BinanceSocket {
     this.setState({ status: 'disconnected', reason: 'stopped' })
   }
 
-  private open(): void {
+  private open(reason: 'connect' | 'reconnect'): void {
     const socket = this.createSocket(this.url)
     this.socket = socket
-    this.setState({ status: 'connecting' })
+    this.setState(
+      reason === 'connect'
+        ? { status: 'connecting' }
+        : { status: 'reconnecting', attempt: Math.max(1, this.attempt), retryInMs: 0 },
+    )
+    this.clearWatchdog()
+    this.watchdogTimer = setTimeout(this.handleConnectTimeout, this.staleAfterMs)
 
     socket.onopen = () => {
       if (socket !== this.socket) return
@@ -196,6 +202,12 @@ export class BinanceSocket {
     this.watchdogTimer = setTimeout(this.handleSilence, this.staleAfterMs)
   }
 
+  private readonly handleConnectTimeout = (): void => {
+    this.watchdogTimer = null
+    this.releaseSocket(4000, 'Connection timed out')
+    this.scheduleReconnect()
+  }
+
   private readonly handleSilence = (): void => {
     this.watchdogTimer = null
     if (!this.probing) {
@@ -238,7 +250,7 @@ export class BinanceSocket {
     }
     if (this.state.status === 'disconnected' && this.state.reason === 'offline') {
       this.attempt = 0
-      this.open()
+      this.open('reconnect')
     }
   }
 
@@ -256,7 +268,7 @@ export class BinanceSocket {
     this.setState({ status: 'reconnecting', attempt: this.attempt, retryInMs })
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null
-      this.open()
+      this.open('reconnect')
     }, retryInMs)
   }
 

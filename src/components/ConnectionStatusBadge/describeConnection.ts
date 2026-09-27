@@ -15,7 +15,7 @@ export function describeConnection(connection: ConnectionState): {
       return { label: `Reconnecting (try ${connection.attempt})…`, tone: 'waiting' }
     case 'disconnected':
       return connection.reason === 'offline'
-        ? { label: 'Offline', tone: 'off' }
+        ? { label: 'Disconnected (offline)', tone: 'off' }
         : { label: 'Disconnected', tone: 'off' }
     case 'error':
       return { label: 'Connection lost', tone: 'problem' }
