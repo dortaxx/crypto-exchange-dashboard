@@ -1,14 +1,14 @@
-import type { LoadStatus, Pair, Ticker } from '../../domain/types'
+import type { LoadStatus, Pair, PairPrice } from '../../domain/types'
 import { PairRow } from '../PairRow/PairRow'
 import styles from './PairTable.module.css'
 
 type PairTableProps = {
   pairs: readonly Pair[]
-  tickers: Readonly<Record<string, Ticker>>
+  prices: Readonly<Record<string, PairPrice>>
   status: LoadStatus
 }
 
-export function PairTable({ pairs, tickers, status }: PairTableProps) {
+export function PairTable({ pairs, prices, status }: PairTableProps) {
   return (
     <>
       <p className={status === 'error' ? styles.error : 'visually-hidden'} role="status">
@@ -37,7 +37,7 @@ export function PairTable({ pairs, tickers, status }: PairTableProps) {
             <PairRow
               key={pair.symbol}
               pair={pair}
-              ticker={tickers[pair.symbol]}
+              price={prices[pair.symbol]}
               loadingDelayMs={index * 120}
             />
           ))}

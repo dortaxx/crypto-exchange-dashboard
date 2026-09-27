@@ -5,6 +5,17 @@ const twoDecimals = withDecimals(2)
 const fourDecimals = withDecimals(4)
 const sixDecimals = withDecimals(6)
 
+const signedPercent = new Intl.NumberFormat('en-US', {
+  style: 'percent',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+  signDisplay: 'exceptZero',
+})
+
+export function formatPercent(percent: number): string {
+  return signedPercent.format(percent / 100)
+}
+
 export function formatPrice(price: number): string {
   if (price >= 10) return twoDecimals.format(price)
   if (price >= 1) return fourDecimals.format(price)

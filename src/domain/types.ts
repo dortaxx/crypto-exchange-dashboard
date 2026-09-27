@@ -13,6 +13,16 @@ export type Ticker = {
 
 export type LoadStatus = 'loading' | 'ready' | 'error'
 
+export type Direction = 'up' | 'down' | 'flat'
+
+export type PairPrice = {
+  price: number
+  startPrice: number
+  changePercent: number
+  direction: Direction
+  updatedAt: number
+}
+
 export type ConnectionState =
   | { status: 'connecting' }
   | { status: 'connected' }

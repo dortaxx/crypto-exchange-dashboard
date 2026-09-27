@@ -32,9 +32,17 @@
   text-align: right;
 }
 
-.price {
+.figure {
   font-family: var(--font-figures);
   font-weight: 500;
+}
+
+.figure[data-trend='up'] {
+  color: var(--up);
+}
+
+.figure[data-trend='down'] {
+  color: var(--down);
 }
 
 .trend {

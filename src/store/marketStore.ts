@@ -1,26 +1,26 @@
 import { create } from 'zustand'
-import { shouldReplaceTicker } from '../domain/tickers'
-import type { LoadStatus, Ticker } from '../domain/types'
+import { nextPairPrice } from '../domain/pairPrice'
+import type { LoadStatus, PairPrice, Ticker } from '../domain/types'
 
 type MarketState = {
-  tickers: Readonly<Record<string, Ticker>>
+  prices: Readonly<Record<string, PairPrice>>
   snapshotStatus: LoadStatus
-  applyTickers: (incoming: readonly Ticker[]) => void
+  applyTickers: (tickers: readonly Ticker[]) => void
   setSnapshotStatus: (status: LoadStatus) => void
 }
 
 export const useMarketStore = create<MarketState>()((set) => ({
-  tickers: {},
+  prices: {},
   snapshotStatus: 'loading',
-  applyTickers: (incoming) =>
+  applyTickers: (tickers) =>
     set((state) => {
-      const tickers = { ...state.tickers }
-      for (const ticker of incoming) {
-        if (shouldReplaceTicker(tickers[ticker.symbol], ticker)) {
-          tickers[ticker.symbol] = ticker
-        }
+      const updated: Record<string, PairPrice> = {}
+      for (const ticker of tickers) {
+        const next = nextPairPrice(updated[ticker.symbol] ?? state.prices[ticker.symbol], ticker)
+        if (next !== null) updated[ticker.symbol] = next
       }
-      return { tickers }
+      if (Object.keys(updated).length === 0) return state
+      return { prices: { ...state.prices, ...updated } }
     }),
   setSnapshotStatus: (snapshotStatus) => set({ snapshotStatus }),
 }))

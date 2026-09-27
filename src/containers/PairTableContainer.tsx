@@ -7,8 +7,8 @@ type PairTableContainerProps = {
 }
 
 export function PairTableContainer({ pairs }: PairTableContainerProps) {
-  const tickers = useMarketStore((state) => state.tickers)
+  const prices = useMarketStore((state) => state.prices)
   const status = useMarketStore((state) => state.snapshotStatus)
 
-  return <PairTable pairs={pairs} tickers={tickers} status={status} />
+  return <PairTable pairs={pairs} prices={prices} status={status} />
 }
