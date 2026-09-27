@@ -1,5 +1,5 @@
 import { nextAlertZone, shouldAlert, type AlertZone } from './alerts'
-import type { PairPrice, PriceAlert } from './types'
+import type { MoveAlert, PairPrice } from './types'
 
 export function roundPercent(percent: number): number {
   return Math.round(percent * 100) / 100
@@ -10,7 +10,7 @@ export function checkAlert(
   zone: AlertZone,
   price: PairPrice,
   now: number,
-): { zone: AlertZone; alert: PriceAlert | null } {
+): { zone: AlertZone; alert: MoveAlert | null } {
   const changePercent = roundPercent(price.changePercent)
   const next = nextAlertZone(zone, changePercent)
   if (next === 'calm' || !shouldAlert(zone, next)) return { zone: next, alert: null }
@@ -18,6 +18,7 @@ export function checkAlert(
   return {
     zone: next,
     alert: {
+      kind: 'move',
       id: `${symbol}-${now}`,
       symbol,
       direction: next,

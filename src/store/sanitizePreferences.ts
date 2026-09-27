@@ -1,4 +1,4 @@
-import type { SortDirection, SortKey, ViewMode } from '../domain/types'
+import type { PriceTarget, SortDirection, SortKey, ViewMode } from '../domain/types'
 
 export type SavedPreferences = {
   pairs: string[]
@@ -7,6 +7,7 @@ export type SavedPreferences = {
   view: ViewMode
   sortKey: SortKey
   sortDirection: SortDirection
+  targets: PriceTarget[]
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -19,6 +20,19 @@ function knownSymbols(value: unknown, known: ReadonlySet<string>): string[] {
   return [
     ...new Set(items.filter((item): item is string => typeof item === 'string' && known.has(item))),
   ]
+}
+
+function savedTargets(value: unknown, tracked: ReadonlySet<string>): PriceTarget[] {
+  if (!Array.isArray(value)) return []
+  const items: unknown[] = value
+  return items.flatMap((item): PriceTarget[] => {
+    if (!isRecord(item)) return []
+    const { id, symbol, price, direction, createdAt } = item
+    if (typeof id !== 'string' || typeof symbol !== 'string' || !tracked.has(symbol)) return []
+    if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) return []
+    if ((direction !== 'up' && direction !== 'down') || typeof createdAt !== 'number') return []
+    return [{ id, symbol, price, direction, createdAt }]
+  })
 }
 
 function oneOf<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
@@ -41,5 +55,6 @@ export function sanitizePreferences(
     view: oneOf(saved.view, ['all', 'favorites'], defaults.view),
     sortKey: oneOf(saved.sortKey, ['name', 'price', 'change'], defaults.sortKey),
     sortDirection: oneOf(saved.sortDirection, ['asc', 'desc'], defaults.sortDirection),
+    targets: savedTargets(saved.targets, tracked),
   }
 }

@@ -8,6 +8,7 @@ const defaults: SavedPreferences = {
   view: 'all',
   sortKey: 'name',
   sortDirection: 'asc',
+  targets: [],
 }
 const known = new Set(['BTCUSDT', 'ETHUSDT', 'SOLUSDT'])
 
@@ -20,6 +21,7 @@ describe('sanitizePreferences', () => {
       view: 'favorites',
       sortKey: 'change',
       sortDirection: 'desc',
+      targets: [{ id: 't1', symbol: 'BTCUSDT', price: 90_000, direction: 'up', createdAt: 1 }],
     }
     expect(sanitizePreferences(saved, defaults, known)).toEqual(saved)
   })
@@ -48,6 +50,22 @@ describe('sanitizePreferences', () => {
       favorites: [],
       hidden: [],
     })
+  })
+
+  it('keeps only well-formed price targets for tracked pairs', () => {
+    const good = { id: 't1', symbol: 'BTCUSDT', price: 90_000, direction: 'up', createdAt: 1 }
+    const saved = {
+      ...defaults,
+      targets: [
+        good,
+        { ...good, id: 't2', symbol: 'DOGEUSDT' },
+        { ...good, id: 't3', price: -5 },
+        { ...good, id: 't4', direction: 'sideways' },
+        { ...good, id: 't5', price: '90000' },
+        'junk',
+      ],
+    }
+    expect(sanitizePreferences(saved, defaults, known).targets).toEqual([good])
   })
 
   it('returns the defaults when nothing usable was saved', () => {

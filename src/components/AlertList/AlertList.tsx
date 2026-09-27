@@ -21,7 +21,8 @@ export function AlertList({ alerts, onDismiss }: AlertListProps) {
         <>
           <p className={styles.empty}>No alerts yet</p>
           <p className={styles.hint}>
-            Pairs that move 2% or more since you opened the page will appear here.
+            Pairs that move 2% or more since you opened the page, and price targets you set below,
+            show up here.
           </p>
         </>
       ) : (

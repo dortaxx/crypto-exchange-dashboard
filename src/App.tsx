@@ -5,6 +5,7 @@ import { AlertsContainer } from './containers/AlertsContainer'
 import { ConnectionStatusContainer } from './containers/ConnectionStatusContainer'
 import { ConverterContainer } from './containers/ConverterContainer'
 import { MarketsContainer } from './containers/MarketsContainer'
+import { PriceTargetsContainer } from './containers/PriceTargetsContainer'
 import { SessionChartContainer } from './containers/SessionChartContainer'
 import { StatsContainer } from './containers/StatsContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
@@ -39,6 +40,7 @@ export function App() {
             </Card>
             <Card titleId="alerts-title" title="Alerts">
               <AlertsContainer />
+              <PriceTargetsContainer pairs={pairs} />
             </Card>
           </div>
         </div>

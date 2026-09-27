@@ -52,6 +52,26 @@ describe('marketStore', () => {
     expect(Object.keys(useMarketStore.getState().alertZones)).toEqual(['BTCUSDT'])
   })
 
+  it('puts new alerts first and keeps the list bounded', () => {
+    const alert = (id: string) =>
+      ({
+        kind: 'target',
+        id,
+        symbol: 'BTCUSDT',
+        direction: 'up',
+        targetPrice: 1,
+        price: 1,
+        triggeredAt: 0,
+      }) as const
+    const { addAlerts } = useMarketStore.getState()
+    addAlerts([alert('old')])
+    addAlerts(Array.from({ length: 25 }, (_, i) => alert(`new-${i}`)))
+
+    const { alerts } = useMarketStore.getState()
+    expect(alerts).toHaveLength(20)
+    expect(alerts[0]?.id).toBe('new-0')
+  })
+
   it('keeps the same state object when there is nothing to forget', () => {
     useMarketStore.getState().applyTickers([ticker('BTCUSDT', 100)])
     const before = useMarketStore.getState()

@@ -1,12 +1,14 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { DEFAULT_SYMBOLS, PAIR_CATALOG } from '../config/pairs'
-import type { SortKey, ViewMode } from '../domain/types'
+import type { PriceTarget, SortKey, ViewMode } from '../domain/types'
 import { sanitizePreferences, type SavedPreferences } from './sanitizePreferences'
 
 type PreferencesState = SavedPreferences & {
   addPair: (symbol: string) => void
   removePair: (symbol: string) => void
+  addTarget: (target: Pick<PriceTarget, 'symbol' | 'price' | 'direction'>) => void
+  removeTargets: (ids: readonly string[]) => void
   toggleFavorite: (symbol: string) => void
   toggleHidden: (symbol: string) => void
   setView: (view: ViewMode) => void
@@ -21,7 +23,10 @@ const DEFAULTS: SavedPreferences = {
   view: 'all',
   sortKey: 'name',
   sortDirection: 'asc',
+  targets: [],
 }
+
+export const MAX_TARGETS = 10
 
 const KNOWN_SYMBOLS = new Set(PAIR_CATALOG.map((pair) => pair.symbol))
 
@@ -51,8 +56,24 @@ export const usePreferencesStore = create<PreferencesState>()(
                 pairs: without(state.pairs, symbol),
                 favorites: without(state.favorites, symbol),
                 hidden: without(state.hidden, symbol),
+                targets: state.targets.filter((target) => target.symbol !== symbol),
               },
         ),
+      addTarget: (target) =>
+        set((state) => {
+          const duplicate = state.targets.some(
+            (existing) => existing.symbol === target.symbol && existing.price === target.price,
+          )
+          if (duplicate || state.targets.length >= MAX_TARGETS) return state
+          return {
+            targets: [
+              { ...target, id: crypto.randomUUID(), createdAt: Date.now() },
+              ...state.targets,
+            ],
+          }
+        }),
+      removeTargets: (ids) =>
+        set((state) => ({ targets: state.targets.filter((target) => !ids.includes(target.id)) })),
       toggleFavorite: (symbol) => set((state) => ({ favorites: toggle(state.favorites, symbol) })),
       toggleHidden: (symbol) => set((state) => ({ hidden: toggle(state.hidden, symbol) })),
       setView: (view) => set({ view }),
@@ -75,6 +96,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         view,
         sortKey,
         sortDirection,
+        targets,
       }): SavedPreferences => ({
         pairs,
         favorites,
@@ -82,6 +104,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         view,
         sortKey,
         sortDirection,
+        targets,
       }),
       merge: (saved, current) => ({
         ...current,

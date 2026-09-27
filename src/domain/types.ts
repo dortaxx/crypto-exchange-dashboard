@@ -15,7 +15,8 @@ export type LoadStatus = 'loading' | 'ready' | 'error'
 
 export type Direction = 'up' | 'down' | 'flat'
 
-export type PriceAlert = {
+export type MoveAlert = {
+  kind: 'move'
   id: string
   symbol: string
   direction: 'up' | 'down'
@@ -23,6 +24,26 @@ export type PriceAlert = {
   price: number
   changePercent: number
   triggeredAt: number
+}
+
+export type TargetAlert = {
+  kind: 'target'
+  id: string
+  symbol: string
+  direction: 'up' | 'down'
+  targetPrice: number
+  price: number
+  triggeredAt: number
+}
+
+export type PriceAlert = MoveAlert | TargetAlert
+
+export type PriceTarget = {
+  id: string
+  symbol: string
+  price: number
+  direction: 'up' | 'down'
+  createdAt: number
 }
 
 export type PricePoint = {

@@ -23,6 +23,7 @@ describe('checkAlert', () => {
     expect(checkAlert('BTCUSDT', 'calm', priceMove(100, 102.14), 1000)).toEqual({
       zone: 'up',
       alert: {
+        kind: 'move',
         id: 'BTCUSDT-1000',
         symbol: 'BTCUSDT',
         direction: 'up',

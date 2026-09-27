@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
+import { reachedTargets } from '../domain/targets'
 import type { Pair, Ticker } from '../domain/types'
 import { BinanceSocket } from '../services/binanceSocket'
 import { useMarketStore } from '../store/marketStore'
@@ -11,7 +12,7 @@ export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
   const trackedRef = useRef<ReadonlySet<string>>(new Set())
 
   useEffect(() => {
-    const { applyTickers, setConnection } = useMarketStore.getState()
+    const { applyTickers, addAlerts, setConnection } = useMarketStore.getState()
     const socket = new BinanceSocket()
     socketRef.current = socket
     const pending = new Map<string, Ticker>()
@@ -26,7 +27,13 @@ export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
         trackedRef.current.has(ticker.symbol),
       )
       pending.clear()
-      applyTickers(tickers, new Set(usePreferencesStore.getState().hidden))
+      const { hidden, targets, removeTargets } = usePreferencesStore.getState()
+      applyTickers(tickers, new Set(hidden))
+
+      const reached = reachedTargets(targets, tickers, Date.now())
+      if (reached.length === 0) return
+      removeTargets(reached.map((alert) => alert.id))
+      addAlerts(reached)
     }, FLUSH_INTERVAL_MS)
 
     socket.connect()
