@@ -11,10 +11,11 @@ type SessionChartProps = {
   pairs: readonly Pair[]
   pair: Pair
   price: PairPrice | undefined
+  unavailable: boolean
   onSelect: (symbol: string) => void
 }
 
-export function SessionChart({ pairs, pair, price, onSelect }: SessionChartProps) {
+export function SessionChart({ pairs, pair, price, unavailable, onSelect }: SessionChartProps) {
   const trend = price === undefined ? 'flat' : changeTrend(price.changePercent)
 
   return (
@@ -26,9 +27,9 @@ export function SessionChart({ pairs, pair, price, onSelect }: SessionChartProps
           <p className={styles.pair}>
             {pair.name} <span className={styles.symbol}>{`${pair.base}/${pair.quote}`}</span>
           </p>
-          {price === undefined ? (
-            <Skeleton width="11rem" height="1.75rem" />
-          ) : (
+          {price === undefined && unavailable && <p className={styles.unavailable}>—</p>}
+          {price === undefined && !unavailable && <Skeleton width="11rem" height="1.75rem" />}
+          {price !== undefined && (
             <p className={styles.quote}>
               <span className={styles.price}>{formatPrice(price.price)}</span>
               <span className={styles.unit}>{pair.quote}</span>
@@ -51,7 +52,11 @@ export function SessionChart({ pairs, pair, price, onSelect }: SessionChartProps
             label={`${pair.name} price this session: opened at ${formatPrice(price.startPrice)}, now ${formatPrice(price.price)} ${pair.quote}`}
           />
         ) : (
-          <p className={styles.waiting}>Waiting for live prices to draw the chart…</p>
+          <p className={styles.waiting}>
+            {unavailable
+              ? 'Couldn’t load prices from Binance. The chart starts once prices arrive.'
+              : 'Waiting for live prices to draw the chart…'}
+          </p>
         )}
       </div>
     </div>

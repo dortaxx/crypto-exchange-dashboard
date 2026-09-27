@@ -15,6 +15,7 @@ export function SessionChartContainer({ pairs }: SessionChartContainerProps) {
   const shown = pairs.filter((pair) => !hidden.includes(pair.symbol))
   const pair = shown.find((candidate) => candidate.symbol === chosen) ?? shown[0]
   const price = useMarketStore((state) => (pair ? state.prices[pair.symbol] : undefined))
+  const unavailable = useMarketStore((state) => state.snapshotStatus === 'error')
 
   if (pair === undefined) {
     return (
@@ -25,5 +26,13 @@ export function SessionChartContainer({ pairs }: SessionChartContainerProps) {
     )
   }
 
-  return <SessionChart pairs={shown} pair={pair} price={price} onSelect={setChosen} />
+  return (
+    <SessionChart
+      pairs={shown}
+      pair={pair}
+      price={price}
+      unavailable={unavailable}
+      onSelect={setChosen}
+    />
+  )
 }

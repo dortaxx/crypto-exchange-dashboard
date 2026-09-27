@@ -10,6 +10,7 @@ type PairRowProps = {
   pair: Pair
   price: PairPrice | undefined
   isFavorite: boolean
+  unavailable: boolean
   loadingDelayMs: number
   onToggleFavorite: (symbol: string) => void
   onHide: (symbol: string) => void
@@ -19,11 +20,18 @@ export function PairRow({
   pair,
   price,
   isFavorite,
+  unavailable,
   loadingDelayMs,
   onToggleFavorite,
   onHide,
 }: PairRowProps) {
   const trend = price === undefined ? 'flat' : changeTrend(price.changePercent)
+  const placeholder = (width: string) =>
+    unavailable ? (
+      <span className={styles.missing}>—</span>
+    ) : (
+      <Skeleton width={width} height="0.875rem" delayMs={loadingDelayMs} />
+    )
 
   return (
     <tr className={styles.row}>
@@ -32,10 +40,9 @@ export function PairRow({
           <button
             type="button"
             className={styles.star}
+            data-action="favorite"
             aria-pressed={isFavorite}
-            aria-label={
-              isFavorite ? `Remove ${pair.name} from favorites` : `Add ${pair.name} to favorites`
-            }
+            aria-label={`Favorite ${pair.name}`}
             onClick={() => {
               onToggleFavorite(pair.symbol)
             }}
@@ -53,7 +60,7 @@ export function PairRow({
       </th>
       <td className={styles.numeric}>
         {price === undefined ? (
-          <Skeleton width="5.5rem" height="0.875rem" delayMs={loadingDelayMs} />
+          placeholder('5.5rem')
         ) : (
           <span key={price.price} className={styles.price} data-direction={price.direction}>
             {formatPrice(price.price)}
@@ -62,7 +69,7 @@ export function PairRow({
       </td>
       <td className={styles.numeric}>
         {price === undefined ? (
-          <Skeleton width="3.5rem" height="0.875rem" delayMs={loadingDelayMs} />
+          placeholder('3.5rem')
         ) : (
           <span className={styles.change} data-trend={trend}>
             {trend !== 'flat' && <TrendIcon direction={trend} />}
@@ -74,6 +81,7 @@ export function PairRow({
         <button
           type="button"
           className={styles.hide}
+          data-action="hide"
           aria-label={`Hide ${pair.name}`}
           title="Hide"
           onClick={() => {

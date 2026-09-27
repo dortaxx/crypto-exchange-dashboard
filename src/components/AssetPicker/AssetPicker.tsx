@@ -39,8 +39,9 @@ export function AssetPicker({ label, value, assets, onChange }: AssetPickerProps
   }, [open])
 
   useEffect(() => {
-    if (open) document.getElementById(optionId(activeIndex))?.scrollIntoView({ block: 'nearest' })
-  })
+    if (!open) return
+    document.getElementById(`${listId}-option-${activeIndex}`)?.scrollIntoView({ block: 'nearest' })
+  }, [open, activeIndex, listId])
 
   const openList = () => {
     setActiveIndex(

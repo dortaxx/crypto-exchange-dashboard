@@ -9,6 +9,7 @@ type MarketsToolbarProps = {
   hiddenPanelId: string
   pairsOpen: boolean
   pairsPanelId: string
+  pairsToggleId: string
   query: string
   onViewChange: (view: ViewMode) => void
   onToggleHidden: () => void
@@ -24,6 +25,7 @@ export function MarketsToolbar({
   hiddenPanelId,
   pairsOpen,
   pairsPanelId,
+  pairsToggleId,
   query,
   onViewChange,
   onToggleHidden,
@@ -88,6 +90,7 @@ export function MarketsToolbar({
           </button>
         )}
         <button
+          id={pairsToggleId}
           type="button"
           className={styles.panelToggle}
           aria-expanded={pairsOpen}

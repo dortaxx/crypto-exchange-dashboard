@@ -50,6 +50,10 @@
   }
 
   .price,
+  .missing {
+    color: var(--text-muted);
+  }
+
   .change {
     font-size: var(--text-sm);
   }
@@ -163,7 +167,7 @@
 }
 
 .hide {
-  opacity: 0.55;
+  opacity: 0.8;
 }
 
 .row:hover .hide,

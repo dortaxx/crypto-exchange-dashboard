@@ -78,6 +78,7 @@
 
 .option[data-active='true'] {
   background: var(--surface-raised);
+  box-shadow: inset 3px 0 0 var(--accent-soft);
 }
 
 .code {

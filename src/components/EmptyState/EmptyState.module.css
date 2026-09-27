@@ -10,12 +10,15 @@
 }
 
 .title {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font-size: var(--text-lg);
   font-weight: 600;
 }
 
 .message {
   max-width: 28rem;
+  overflow-wrap: anywhere;
   color: var(--text-muted);
 }
 

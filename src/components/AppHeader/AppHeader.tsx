@@ -15,7 +15,7 @@ export function AppHeader({ status, controls }: AppHeaderProps) {
             <rect width="32" height="32" rx="8" />
             <polyline points="7,20 13,14 18,17 25,10" />
           </svg>
-          Crypto Dashboard
+          <span className={styles.wordmark}>Crypto Dashboard</span>
         </p>
         <div className={styles.aside}>
           <p className={styles.source}>Binance spot · USDT</p>

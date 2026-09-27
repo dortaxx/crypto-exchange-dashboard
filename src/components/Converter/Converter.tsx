@@ -75,9 +75,7 @@ export function Converter({
         <div className={styles.row}>
           <div className={styles.field}>
             <span className={styles.caption}>You get</span>
-            <output className={styles.result} htmlFor={inputId} aria-live="polite">
-              {result ?? '—'}
-            </output>
+            <span className={styles.result}>{result ?? '—'}</span>
           </div>
           <AssetPicker label="Convert to" value={to} assets={assets} onChange={onToChange} />
         </div>
@@ -89,6 +87,9 @@ export function Converter({
           <path d="M8 7.25v4M8 4.75v.01" />
         </svg>
         {message ?? rate ?? 'Waiting for prices…'}
+      </p>
+      <p className="visually-hidden" role="status">
+        {message ?? ''}
       </p>
 
       <div className={styles.chips} role="group" aria-label="Quick amounts">

@@ -10,7 +10,10 @@ describe('describeConnection', () => {
   })
 
   it('connected', () => {
-    expect(describeConnection({ status: 'connected' })).toEqual({ label: 'Live', tone: 'live' })
+    expect(describeConnection({ status: 'connected' })).toEqual({
+      label: 'Connected',
+      tone: 'live',
+    })
   })
 
   it('reconnecting shows which try it is on', () => {

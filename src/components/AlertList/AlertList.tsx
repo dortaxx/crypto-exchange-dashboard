@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+import { focusAfterRemoval } from '../focusAfterRemoval'
 import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './AlertList.module.css'
 
@@ -15,6 +17,8 @@ type AlertListProps = {
 }
 
 export function AlertList({ alerts, onDismiss }: AlertListProps) {
+  const listRef = useRef<HTMLUListElement>(null)
+
   return (
     <div aria-live="polite">
       {alerts.length === 0 ? (
@@ -26,8 +30,8 @@ export function AlertList({ alerts, onDismiss }: AlertListProps) {
           </p>
         </>
       ) : (
-        <ul className={styles.list}>
-          {alerts.map((alert) => (
+        <ul ref={listRef} className={styles.list}>
+          {alerts.map((alert, index) => (
             <li key={alert.id} className={styles.alert} data-direction={alert.direction}>
               <span className={styles.icon}>
                 <TrendIcon direction={alert.direction} />
@@ -41,9 +45,11 @@ export function AlertList({ alerts, onDismiss }: AlertListProps) {
               <button
                 type="button"
                 className={styles.dismiss}
+                data-action="dismiss"
                 aria-label={`Dismiss: ${alert.message}`}
                 onClick={() => {
                   onDismiss(alert.id)
+                  focusAfterRemoval(listRef.current, '[data-action="dismiss"]', index)
                 }}
               >
                 ×

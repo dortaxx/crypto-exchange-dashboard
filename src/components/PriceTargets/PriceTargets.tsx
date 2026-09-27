@@ -1,5 +1,6 @@
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 import { AssetPicker, type AssetOption } from '../AssetPicker/AssetPicker'
+import { focusAfterRemoval } from '../focusAfterRemoval'
 import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './PriceTargets.module.css'
 
@@ -39,6 +40,8 @@ export function PriceTargets({
 }: PriceTargetsProps) {
   const inputId = useId()
   const noteId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
   const verb = (direction: 'up' | 'down') => (direction === 'up' ? 'rises above' : 'falls below')
 
   return (
@@ -55,6 +58,7 @@ export function PriceTargets({
           <label className={styles.field} htmlFor={inputId}>
             <span className={styles.caption}>Alert me at (USDT)</span>
             <input
+              ref={inputRef}
               id={inputId}
               className={styles.input}
               type="text"
@@ -73,8 +77,11 @@ export function PriceTargets({
           <AssetPicker label="Target coin" value={asset} assets={assets} onChange={onAssetChange} />
         </div>
         <div className={styles.footer}>
-          <p id={noteId} className={invalid ? styles.error : styles.note} aria-live="polite">
+          <p id={noteId} className={invalid ? styles.error : styles.note}>
             {note}
+          </p>
+          <p className="visually-hidden" role="status">
+            {invalid ? note : ''}
           </p>
           <button type="submit" className={styles.add} disabled={!canAdd}>
             Add target
@@ -83,8 +90,8 @@ export function PriceTargets({
       </form>
 
       {targets.length > 0 && (
-        <ul className={styles.list} aria-label="Active price targets">
-          {targets.map((target) => (
+        <ul ref={listRef} className={styles.list} aria-label="Active price targets">
+          {targets.map((target, index) => (
             <li key={target.id} className={styles.item} data-direction={target.direction}>
               <TrendIcon direction={target.direction} />
               <span className={styles.text}>
@@ -95,8 +102,15 @@ export function PriceTargets({
                 type="button"
                 className={styles.remove}
                 aria-label={`Remove target: ${target.asset} ${verb(target.direction)} ${target.price}`}
+                data-action="remove-target"
                 onClick={() => {
                   onRemove(target.id)
+                  focusAfterRemoval(
+                    listRef.current,
+                    '[data-action="remove-target"]',
+                    index,
+                    inputRef.current,
+                  )
                 }}
               >
                 ×

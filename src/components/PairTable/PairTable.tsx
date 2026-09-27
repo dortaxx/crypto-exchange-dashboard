@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import type { LoadStatus, Pair, PairPrice, SortDirection, SortKey } from '../../domain/types'
+import { focusAfterRemoval } from '../focusAfterRemoval'
 import { PairRow } from '../PairRow/PairRow'
 import styles from './PairTable.module.css'
 
@@ -31,6 +33,8 @@ export function PairTable({
   sortDirection,
   onSort,
 }: PairTableProps) {
+  const bodyRef = useRef<HTMLTableSectionElement>(null)
+
   return (
     <>
       <p className={status === 'error' ? styles.error : 'visually-hidden'} role="status">
@@ -79,16 +83,23 @@ export function PairTable({
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody ref={bodyRef}>
             {pairs.map((pair, index) => (
               <PairRow
                 key={pair.symbol}
                 pair={pair}
                 price={prices[pair.symbol]}
                 isFavorite={favorites.has(pair.symbol)}
+                unavailable={status === 'error'}
                 loadingDelayMs={index * 120}
-                onToggleFavorite={onToggleFavorite}
-                onHide={onHide}
+                onToggleFavorite={(symbol) => {
+                  onToggleFavorite(symbol)
+                  focusAfterRemoval(bodyRef.current, '[data-action="favorite"]', index)
+                }}
+                onHide={(symbol) => {
+                  onHide(symbol)
+                  focusAfterRemoval(bodyRef.current, '[data-action="hide"]', index)
+                }}
               />
             ))}
           </tbody>

@@ -20,7 +20,7 @@ export function ConnectionStatusBadge({ connection, onRetry }: ConnectionStatusB
       <span
         role="status"
         className={styles.label}
-        title={connection.status === 'error' ? connection.message : undefined}
+        title={connection.status === 'error' ? connection.message : label}
       >
         {label}
       </span>

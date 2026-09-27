@@ -28,6 +28,7 @@
 }
 
 .mark {
+  flex-shrink: 0;
   width: 1.75rem;
   height: 1.75rem;
 }
@@ -56,10 +57,30 @@
   display: flex;
   gap: var(--space-4);
   align-items: center;
+  min-width: 0;
 }
 
 @media (max-width: 40rem) {
   .source {
     display: none;
+  }
+}
+
+@media (max-width: 29.99rem) {
+  .inner {
+    gap: var(--space-3);
+  }
+
+  .aside {
+    gap: var(--space-3);
+  }
+
+  .wordmark {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

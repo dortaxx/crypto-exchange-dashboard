@@ -10,7 +10,7 @@ export function describeConnection(connection: ConnectionState): {
     case 'connecting':
       return { label: 'Connecting…', tone: 'waiting' }
     case 'connected':
-      return { label: 'Live', tone: 'live' }
+      return { label: 'Connected', tone: 'live' }
     case 'reconnecting':
       return { label: `Reconnecting (try ${connection.attempt})…`, tone: 'waiting' }
     case 'disconnected':

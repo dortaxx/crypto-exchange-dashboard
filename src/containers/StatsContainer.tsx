@@ -11,6 +11,7 @@ type StatsContainerProps = {
 export function StatsContainer({ pairs }: StatsContainerProps) {
   const prices = useMarketStore((state) => state.prices)
   const alertCount = useMarketStore((state) => state.alerts.length)
+  const failed = useMarketStore((state) => state.snapshotStatus === 'error')
   const hasPrices = Object.keys(prices).length > 0
   const { gainer, loser } = topMovers(
     prices,
@@ -18,7 +19,7 @@ export function StatsContainer({ pairs }: StatsContainerProps) {
   )
 
   const describeMover = (mover: Mover | null) => {
-    if (!hasPrices) return undefined
+    if (!hasPrices) return failed ? '—' : undefined
     if (mover === null) return '—'
     const base = pairs.find((pair) => pair.symbol === mover.symbol)?.base ?? mover.symbol
     return `${base} ${formatPercent(mover.changePercent)}`

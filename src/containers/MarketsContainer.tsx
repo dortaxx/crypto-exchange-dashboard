@@ -39,6 +39,7 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
   const [query, setQuery] = useState('')
   const hiddenPanelId = useId()
   const pairsPanelId = useId()
+  const pairsToggleId = useId()
 
   const tracked = new Set(pairs.map((pair) => pair.symbol))
   const shown = visiblePairs(pairs, { hidden, favorites, view })
@@ -57,6 +58,17 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
 
   const emptyState = (): EmptyStateProps | null => {
     if (rows.length > 0) return null
+    if (
+      shown.length === 0 &&
+      view === 'favorites' &&
+      favorites.some((symbol) => hidden.includes(symbol))
+    ) {
+      return {
+        title: 'Your favorites are hidden',
+        message: 'Restore them to see their live prices here.',
+        action: { label: 'Show hidden pairs', onClick: () => setPanel('hidden') },
+      }
+    }
     if (shown.length === 0 && view === 'favorites') {
       return {
         title: 'No favorites to show',
@@ -110,6 +122,7 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
         hiddenPanelId={hiddenPanelId}
         pairsOpen={panel === 'pairs'}
         pairsPanelId={pairsPanelId}
+        pairsToggleId={pairsToggleId}
         query={query}
         onViewChange={setView}
         onToggleHidden={() => {
@@ -124,8 +137,15 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
         <HiddenPairsPanel
           id={hiddenPanelId}
           pairs={hiddenPairs}
-          onRestore={toggleHidden}
-          onRestoreAll={restoreAll}
+          fallbackFocusId={pairsToggleId}
+          onRestore={(symbol) => {
+            toggleHidden(symbol)
+            if (hiddenPairs.length === 1) setPanel(null)
+          }}
+          onRestoreAll={() => {
+            restoreAll()
+            setPanel(null)
+          }}
         />
       )}
       {panel === 'pairs' && (
