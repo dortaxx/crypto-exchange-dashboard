@@ -68,5 +68,6 @@ export type ConnectionState =
   | { status: 'error'; message: string }
 
 export type ViewMode = 'all' | 'favorites'
+export type ThemeChoice = 'system' | 'light' | 'dark'
 export type SortKey = 'name' | 'price' | 'change'
 export type SortDirection = 'asc' | 'desc'

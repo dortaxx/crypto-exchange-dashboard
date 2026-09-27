@@ -9,6 +9,7 @@ const defaults: SavedPreferences = {
   sortKey: 'name',
   sortDirection: 'asc',
   targets: [],
+  theme: 'system',
 }
 const known = new Set(['BTCUSDT', 'ETHUSDT', 'SOLUSDT'])
 
@@ -22,6 +23,7 @@ describe('sanitizePreferences', () => {
       sortKey: 'change',
       sortDirection: 'desc',
       targets: [{ id: 't1', symbol: 'BTCUSDT', price: 90_000, direction: 'up', createdAt: 1 }],
+      theme: 'light',
     }
     expect(sanitizePreferences(saved, defaults, known)).toEqual(saved)
   })
@@ -32,7 +34,7 @@ describe('sanitizePreferences', () => {
   })
 
   it('falls back to defaults for unknown or corrupted values', () => {
-    const saved = { favorites: 'BTCUSDT', hidden: null, view: 'grid', sortKey: 7 }
+    const saved = { favorites: 'BTCUSDT', hidden: null, view: 'grid', sortKey: 7, theme: 'neon' }
     expect(sanitizePreferences(saved, defaults, known)).toEqual(defaults)
   })
 

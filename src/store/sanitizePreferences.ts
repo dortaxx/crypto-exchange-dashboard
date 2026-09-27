@@ -1,4 +1,4 @@
-import type { PriceTarget, SortDirection, SortKey, ViewMode } from '../domain/types'
+import type { PriceTarget, SortDirection, SortKey, ThemeChoice, ViewMode } from '../domain/types'
 
 export type SavedPreferences = {
   pairs: string[]
@@ -8,6 +8,7 @@ export type SavedPreferences = {
   sortKey: SortKey
   sortDirection: SortDirection
   targets: PriceTarget[]
+  theme: ThemeChoice
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -56,5 +57,6 @@ export function sanitizePreferences(
     sortKey: oneOf(saved.sortKey, ['name', 'price', 'change'], defaults.sortKey),
     sortDirection: oneOf(saved.sortDirection, ['asc', 'desc'], defaults.sortDirection),
     targets: savedTargets(saved.targets, tracked),
+    theme: oneOf(saved.theme, ['system', 'light', 'dark'], defaults.theme),
   }
 }

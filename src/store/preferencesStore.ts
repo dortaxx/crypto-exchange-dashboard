@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { DEFAULT_SYMBOLS, PAIR_CATALOG } from '../config/pairs'
-import type { PriceTarget, SortKey, ViewMode } from '../domain/types'
+import type { PriceTarget, SortKey, ThemeChoice, ViewMode } from '../domain/types'
 import { sanitizePreferences, type SavedPreferences } from './sanitizePreferences'
 
 type PreferencesState = SavedPreferences & {
@@ -14,6 +14,7 @@ type PreferencesState = SavedPreferences & {
   setView: (view: ViewMode) => void
   setSort: (key: SortKey) => void
   restoreAll: () => void
+  setTheme: (theme: ThemeChoice) => void
 }
 
 const DEFAULTS: SavedPreferences = {
@@ -24,6 +25,7 @@ const DEFAULTS: SavedPreferences = {
   sortKey: 'name',
   sortDirection: 'asc',
   targets: [],
+  theme: 'system',
 }
 
 export const MAX_TARGETS = 10
@@ -78,6 +80,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       toggleHidden: (symbol) => set((state) => ({ hidden: toggle(state.hidden, symbol) })),
       setView: (view) => set({ view }),
       restoreAll: () => set({ hidden: [] }),
+      setTheme: (theme) => set({ theme }),
       setSort: (sortKey) =>
         set((state) =>
           state.sortKey === sortKey
@@ -97,6 +100,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         sortKey,
         sortDirection,
         targets,
+        theme,
       }): SavedPreferences => ({
         pairs,
         favorites,
@@ -105,6 +109,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         sortKey,
         sortDirection,
         targets,
+        theme,
       }),
       merge: (saved, current) => ({
         ...current,

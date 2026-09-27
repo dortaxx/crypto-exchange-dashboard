@@ -8,6 +8,7 @@ import { MarketsContainer } from './containers/MarketsContainer'
 import { PriceTargetsContainer } from './containers/PriceTargetsContainer'
 import { SessionChartContainer } from './containers/SessionChartContainer'
 import { StatsContainer } from './containers/StatsContainer'
+import { ThemeToggleContainer } from './containers/ThemeToggleContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
 import { useTrackedPairs } from './hooks/useTrackedPairs'
@@ -19,7 +20,10 @@ export function App() {
 
   return (
     <>
-      <AppHeader status={<ConnectionStatusContainer onRetry={retry} />} />
+      <AppHeader
+        status={<ConnectionStatusContainer onRetry={retry} />}
+        controls={<ThemeToggleContainer />}
+      />
 
       <main className={styles.page}>
         <section className={styles.hero} aria-labelledby="page-title">

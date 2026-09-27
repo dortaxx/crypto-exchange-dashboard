@@ -3,9 +3,10 @@ import styles from './AppHeader.module.css'
 
 type AppHeaderProps = {
   status: ReactNode
+  controls: ReactNode
 }
 
-export function AppHeader({ status }: AppHeaderProps) {
+export function AppHeader({ status, controls }: AppHeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
@@ -19,6 +20,7 @@ export function AppHeader({ status }: AppHeaderProps) {
         <div className={styles.aside}>
           <p className={styles.source}>Binance spot · USDT</p>
           {status}
+          {controls}
         </div>
       </div>
     </header>
