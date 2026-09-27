@@ -9,11 +9,13 @@ import { PriceTargetsContainer } from './containers/PriceTargetsContainer'
 import { SessionChartContainer } from './containers/SessionChartContainer'
 import { StatsContainer } from './containers/StatsContainer'
 import { ThemeToggleContainer } from './containers/ThemeToggleContainer'
+import { useCrossTabPreferences } from './hooks/useCrossTabPreferences'
 import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
 import { useTrackedPairs } from './hooks/useTrackedPairs'
 
 export function App() {
+  useCrossTabPreferences()
   const pairs = useTrackedPairs()
   useTickerSnapshot(pairs)
   const { retry } = useMarketFeed(pairs)

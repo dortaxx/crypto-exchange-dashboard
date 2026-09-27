@@ -29,8 +29,13 @@ const DEFAULTS: SavedPreferences = {
 }
 
 export const MAX_TARGETS = 10
+export const PREFERENCES_STORAGE_KEY = 'crypto-dashboard:preferences'
 
 const KNOWN_SYMBOLS = new Set(PAIR_CATALOG.map((pair) => pair.symbol))
+
+function targetId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+}
 
 function without(list: readonly string[], item: string): string[] {
   return list.filter((entry) => entry !== item)
@@ -68,10 +73,7 @@ export const usePreferencesStore = create<PreferencesState>()(
           )
           if (duplicate || state.targets.length >= MAX_TARGETS) return state
           return {
-            targets: [
-              { ...target, id: crypto.randomUUID(), createdAt: Date.now() },
-              ...state.targets,
-            ],
+            targets: [{ ...target, id: targetId(), createdAt: Date.now() }, ...state.targets],
           }
         }),
       removeTargets: (ids) =>
@@ -89,7 +91,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         ),
     }),
     {
-      name: 'crypto-dashboard:preferences',
+      name: PREFERENCES_STORAGE_KEY,
       version: 1,
       storage: createJSONStorage(() => localStorage),
       partialize: ({
