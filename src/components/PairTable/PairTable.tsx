@@ -1,4 +1,4 @@
-import type { LoadStatus, Pair, PairPrice } from '../../domain/types'
+import type { LoadStatus, Pair, PairPrice, SortDirection, SortKey } from '../../domain/types'
 import { PairRow } from '../PairRow/PairRow'
 import styles from './PairTable.module.css'
 
@@ -9,7 +9,16 @@ type PairTableProps = {
   favorites: ReadonlySet<string>
   onToggleFavorite: (symbol: string) => void
   onHide: (symbol: string) => void
+  sortKey: SortKey
+  sortDirection: SortDirection
+  onSort: (key: SortKey) => void
 }
+
+const COLUMNS: readonly { key: SortKey; label: string; numeric: boolean }[] = [
+  { key: 'name', label: 'Asset', numeric: false },
+  { key: 'price', label: 'Price', numeric: true },
+  { key: 'change', label: 'Since open', numeric: true },
+]
 
 export function PairTable({
   pairs,
@@ -18,6 +27,9 @@ export function PairTable({
   favorites,
   onToggleFavorite,
   onHide,
+  sortKey,
+  sortDirection,
+  onSort,
 }: PairTableProps) {
   return (
     <>
@@ -29,15 +41,39 @@ export function PairTable({
         <table className={styles.table}>
           <thead>
             <tr>
-              <th scope="col" className={styles.asset}>
-                Asset
-              </th>
-              <th scope="col" className={styles.numeric}>
-                Price
-              </th>
-              <th scope="col" className={styles.numeric}>
-                Since open
-              </th>
+              {COLUMNS.map((column) => {
+                const active = column.key === sortKey
+                return (
+                  <th
+                    key={column.key}
+                    scope="col"
+                    className={column.numeric ? styles.numeric : styles.asset}
+                    aria-sort={
+                      active ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined
+                    }
+                  >
+                    <button
+                      type="button"
+                      className={styles.sort}
+                      data-active={active}
+                      onClick={() => {
+                        onSort(column.key)
+                      }}
+                    >
+                      {column.label}
+                      <svg
+                        className={styles.sortIcon}
+                        data-direction={active ? sortDirection : undefined}
+                        viewBox="0 0 10 14"
+                        aria-hidden="true"
+                      >
+                        <path className={styles.ascending} d="M5 1.5 8.5 5.5h-7Z" />
+                        <path className={styles.descending} d="M5 12.5 1.5 8.5h7Z" />
+                      </svg>
+                    </button>
+                  </th>
+                )
+              })}
               <th scope="col" className={styles.actions}>
                 <span className="visually-hidden">Actions</span>
               </th>

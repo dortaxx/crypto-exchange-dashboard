@@ -32,6 +32,37 @@
   text-align: right;
 }
 
+.sort {
+  display: inline-flex;
+  gap: 0.375rem;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sort:hover,
+.sort[data-active='true'] {
+  color: var(--text);
+}
+
+.sortIcon {
+  width: 0.5rem;
+  height: 0.75rem;
+  fill: currentColor;
+}
+
+.sortIcon path {
+  opacity: 0.3;
+}
+
+.sortIcon[data-direction='asc'] .ascending,
+.sortIcon[data-direction='desc'] .descending {
+  opacity: 1;
+}
+
 .table .actions {
   width: 2.5rem;
 }

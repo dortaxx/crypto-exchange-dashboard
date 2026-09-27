@@ -7,8 +7,10 @@ type MarketsToolbarProps = {
   hiddenCount: number
   hiddenOpen: boolean
   hiddenPanelId: string
+  query: string
   onViewChange: (view: ViewMode) => void
   onToggleHidden: () => void
+  onQueryChange: (query: string) => void
 }
 
 export function MarketsToolbar({
@@ -17,8 +19,10 @@ export function MarketsToolbar({
   hiddenCount,
   hiddenOpen,
   hiddenPanelId,
+  query,
   onViewChange,
   onToggleHidden,
+  onQueryChange,
 }: MarketsToolbarProps) {
   return (
     <div className={styles.toolbar}>
@@ -45,6 +49,25 @@ export function MarketsToolbar({
           {favoriteCount > 0 && <span className={styles.count}>{favoriteCount}</span>}
         </button>
       </div>
+
+      <label className={styles.search}>
+        <svg className={styles.searchIcon} viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="7" cy="7" r="4.75" />
+          <path d="m10.5 10.5 3 3" />
+        </svg>
+        <span className="visually-hidden">Search pairs</span>
+        <input
+          type="search"
+          className={styles.searchInput}
+          placeholder="Search name or symbol"
+          autoComplete="off"
+          spellCheck={false}
+          value={query}
+          onChange={(event) => {
+            onQueryChange(event.target.value)
+          }}
+        />
+      </label>
 
       {hiddenCount > 0 && (
         <button
