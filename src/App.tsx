@@ -2,20 +2,13 @@ import styles from './App.module.css'
 import { AppHeader } from './components/AppHeader/AppHeader'
 import { Card } from './components/Card/Card'
 import { SectionHeading } from './components/SectionHeading/SectionHeading'
-import { StatStrip } from './components/StatStrip/StatStrip'
 import { DEFAULT_PAIRS } from './config/pairs'
 import { AlertsContainer } from './containers/AlertsContainer'
 import { ConnectionStatusContainer } from './containers/ConnectionStatusContainer'
 import { PairTableContainer } from './containers/PairTableContainer'
+import { StatsContainer } from './containers/StatsContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
-
-const sessionStats = [
-  { label: 'Pairs tracked', value: String(DEFAULT_PAIRS.length) },
-  { label: 'Top gainer since open' },
-  { label: 'Top loser since open' },
-  { label: 'Alerts' },
-]
 
 export function App() {
   useTickerSnapshot(DEFAULT_PAIRS)
@@ -31,7 +24,7 @@ export function App() {
             Live crypto prices
           </h1>
           <p className={styles.subtitle}>Real-time spot prices from Binance, quoted in USDT.</p>
-          <StatStrip stats={sessionStats} />
+          <StatsContainer pairs={DEFAULT_PAIRS} />
         </section>
 
         <div className={styles.cards}>
