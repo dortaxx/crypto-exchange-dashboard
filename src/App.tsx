@@ -4,6 +4,7 @@ import { Card } from './components/Card/Card'
 import { SectionHeading } from './components/SectionHeading/SectionHeading'
 import { StatStrip } from './components/StatStrip/StatStrip'
 import { DEFAULT_PAIRS } from './config/pairs'
+import { AlertsContainer } from './containers/AlertsContainer'
 import { PairTableContainer } from './containers/PairTableContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
@@ -37,10 +38,7 @@ export function App() {
             <p className={styles.muted}>Available once live prices arrive.</p>
           </Card>
           <Card titleId="alerts-title" title="Alerts">
-            <p className={styles.empty}>No alerts yet</p>
-            <p className={styles.muted}>
-              Pairs that move 2% or more since you opened the page will appear here.
-            </p>
+            <AlertsContainer />
           </Card>
         </div>
 

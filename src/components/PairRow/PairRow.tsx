@@ -1,7 +1,9 @@
+import { roundPercent } from '../../domain/alertCheck'
 import { formatPercent, formatPrice } from '../../domain/format'
 import type { Pair, PairPrice } from '../../domain/types'
 import { CoinIcon } from '../CoinIcon/CoinIcon'
 import { Skeleton } from '../Skeleton/Skeleton'
+import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './PairRow.module.css'
 
 type PairRowProps = {
@@ -11,12 +13,15 @@ type PairRowProps = {
 }
 
 function trendOf(changePercent: number): 'up' | 'down' | 'flat' {
-  if (changePercent > 0) return 'up'
-  if (changePercent < 0) return 'down'
+  const shown = roundPercent(changePercent)
+  if (shown > 0) return 'up'
+  if (shown < 0) return 'down'
   return 'flat'
 }
 
 export function PairRow({ pair, price, loadingDelayMs }: PairRowProps) {
+  const trend = price === undefined ? 'flat' : trendOf(price.changePercent)
+
   return (
     <tr className={styles.row}>
       <th scope="row" className={styles.asset}>
@@ -30,14 +35,17 @@ export function PairRow({ pair, price, loadingDelayMs }: PairRowProps) {
         {price === undefined ? (
           <Skeleton width="5.5rem" height="0.875rem" delayMs={loadingDelayMs} />
         ) : (
-          <span className={styles.figure}>{formatPrice(price.price)}</span>
+          <span key={price.price} className={styles.price} data-direction={price.direction}>
+            {formatPrice(price.price)}
+          </span>
         )}
       </td>
       <td className={styles.numeric}>
         {price === undefined ? (
           <Skeleton width="3.5rem" height="0.875rem" delayMs={loadingDelayMs} />
         ) : (
-          <span className={styles.figure} data-trend={trendOf(price.changePercent)}>
+          <span className={styles.change} data-trend={trend}>
+            {trend !== 'flat' && <TrendIcon direction={trend} />}
             {formatPercent(price.changePercent)}
           </span>
         )}

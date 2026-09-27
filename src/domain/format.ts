@@ -12,6 +12,16 @@ const signedPercent = new Intl.NumberFormat('en-US', {
   signDisplay: 'exceptZero',
 })
 
+const clockTime = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+})
+
+export function formatTime(timestamp: number): string {
+  return clockTime.format(timestamp)
+}
+
 export function formatPercent(percent: number): string {
   return signedPercent.format(percent / 100)
 }

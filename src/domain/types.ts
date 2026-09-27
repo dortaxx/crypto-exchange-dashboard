@@ -15,6 +15,16 @@ export type LoadStatus = 'loading' | 'ready' | 'error'
 
 export type Direction = 'up' | 'down' | 'flat'
 
+export type PriceAlert = {
+  id: string
+  symbol: string
+  direction: 'up' | 'down'
+  startPrice: number
+  price: number
+  changePercent: number
+  triggeredAt: number
+}
+
 export type PairPrice = {
   price: number
   startPrice: number

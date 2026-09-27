@@ -1,0 +1,14 @@
+.icon {
+  display: block;
+  flex-shrink: 0;
+  width: 0.625rem;
+  height: 0.625rem;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.icon[data-direction='down'] {
+  transform: rotate(180deg);
+}
