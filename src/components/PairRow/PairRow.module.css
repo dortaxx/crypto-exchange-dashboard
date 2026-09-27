@@ -39,6 +39,21 @@
     gap: var(--space-2);
   }
 
+  .assetInner > img,
+  .assetInner > span[aria-hidden='true'] {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .numeric {
+    padding-left: var(--space-2);
+  }
+
+  .price,
+  .change {
+    font-size: var(--text-sm);
+  }
+
   .label {
     flex-direction: column;
     gap: 0;
@@ -154,4 +169,28 @@
 .row:hover .hide,
 .hide:focus-visible {
   opacity: 1;
+}
+
+@media (max-width: 23.99rem) {
+  .assetInner {
+    gap: 0.375rem;
+  }
+
+  .name {
+    font-size: var(--text-sm);
+  }
+
+  .star,
+  .hide {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .numeric {
+    padding-left: var(--space-1);
+  }
+
+  .change > svg {
+    display: none;
+  }
 }

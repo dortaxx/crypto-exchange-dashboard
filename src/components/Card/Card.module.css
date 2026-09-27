@@ -10,3 +10,9 @@
   font-size: var(--text-md);
   font-weight: 600;
 }
+
+@media (max-width: 29.99rem) {
+  .card {
+    padding: var(--space-4) var(--space-4) var(--space-5);
+  }
+}

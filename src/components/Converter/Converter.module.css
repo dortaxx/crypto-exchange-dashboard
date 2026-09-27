@@ -151,3 +151,14 @@
   background: var(--accent);
   color: var(--accent-contrast);
 }
+
+@media (max-width: 29.99rem) {
+  .row {
+    padding: var(--space-3);
+  }
+
+  .amount,
+  .result {
+    font-size: var(--text-md);
+  }
+}

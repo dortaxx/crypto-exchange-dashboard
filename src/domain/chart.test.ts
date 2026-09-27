@@ -47,6 +47,12 @@ describe('buildPriceChart', () => {
     const long = buildPriceChart(points([0, 1], [3_600_000, 2]))
     expect(long?.timeStep).toBe(900_000)
   })
+
+  it('uses wider time steps when fewer labels fit', () => {
+    const narrow = buildPriceChart(points([1_000, 1], [21_000, 2]), 2)
+    expect(narrow?.timeStep).toBe(10_000)
+    expect(narrow?.timeTicks).toEqual([10_000, 20_000])
+  })
 })
 
 describe('nearestPoint', () => {

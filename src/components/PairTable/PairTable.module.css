@@ -66,3 +66,9 @@
 .table .actions {
   width: 2.5rem;
 }
+
+@media (max-width: 29.99rem) {
+  .asset {
+    width: auto;
+  }
+}

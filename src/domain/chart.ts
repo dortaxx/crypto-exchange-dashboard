@@ -3,7 +3,6 @@ import type { PricePoint } from './types'
 const MIN_SPAN_RATIO = 0.0005
 const PADDING_RATIO = 0.15
 const PRICE_TICK_TARGET = 4
-const TIME_TICK_TARGET = 4
 const SECOND = 1000
 const TIME_STEPS = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200].map(
   (seconds) => seconds * SECOND,
@@ -34,7 +33,10 @@ export function chartY(frame: ChartFrame, price: number): number {
   return (1 - (price - frame.bottom) / (frame.top - frame.bottom)) * 100
 }
 
-export function buildPriceChart(points: readonly PricePoint[]): PriceChartModel | null {
+export function buildPriceChart(
+  points: readonly PricePoint[],
+  timeTickTarget = 4,
+): PriceChartModel | null {
   const first = points[0]
   const last = points.at(-1)
   if (first === undefined || last === undefined || last.time <= first.time) return null
@@ -60,7 +62,7 @@ export function buildPriceChart(points: readonly PricePoint[]): PriceChartModel 
     })
     .join('')
   const timeStep =
-    TIME_STEPS.find((step) => (frame.end - frame.start) / step <= TIME_TICK_TARGET) ??
+    TIME_STEPS.find((step) => (frame.end - frame.start) / step <= timeTickTarget) ??
     LONGEST_TIME_STEP
 
   return {
