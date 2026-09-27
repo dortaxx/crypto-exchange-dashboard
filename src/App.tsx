@@ -6,6 +6,7 @@ import { AlertsContainer } from './containers/AlertsContainer'
 import { ConnectionStatusContainer } from './containers/ConnectionStatusContainer'
 import { ConverterContainer } from './containers/ConverterContainer'
 import { MarketsContainer } from './containers/MarketsContainer'
+import { SessionChartContainer } from './containers/SessionChartContainer'
 import { StatsContainer } from './containers/StatsContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
@@ -27,13 +28,18 @@ export function App() {
           <StatsContainer pairs={DEFAULT_PAIRS} />
         </section>
 
-        <div className={styles.cards}>
-          <Card titleId="converter-title" title="Converter">
-            <ConverterContainer pairs={DEFAULT_PAIRS} />
+        <div className={styles.workspace}>
+          <Card titleId="chart-title" title="Session chart" className={styles.chartCard}>
+            <SessionChartContainer pairs={DEFAULT_PAIRS} />
           </Card>
-          <Card titleId="alerts-title" title="Alerts">
-            <AlertsContainer />
-          </Card>
+          <div className={styles.side}>
+            <Card titleId="converter-title" title="Converter">
+              <ConverterContainer pairs={DEFAULT_PAIRS} />
+            </Card>
+            <Card titleId="alerts-title" title="Alerts">
+              <AlertsContainer />
+            </Card>
+          </div>
         </div>
 
         <MarketsContainer pairs={DEFAULT_PAIRS} />

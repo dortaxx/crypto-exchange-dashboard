@@ -4,9 +4,14 @@
   font-size: var(--text-sm);
 }
 
+.scroller {
+  position: relative;
+  margin-top: var(--space-4);
+  overflow-x: auto;
+}
+
 .table {
   width: 100%;
-  margin-top: var(--space-4);
   border-collapse: collapse;
 }
 
@@ -25,17 +30,6 @@
 
 .table .numeric {
   text-align: right;
-}
-
-.table .trend {
-  display: none;
-  text-align: right;
-}
-
-@media (min-width: 48rem) {
-  .table .trend {
-    display: table-cell;
-  }
 }
 
 .table .actions {

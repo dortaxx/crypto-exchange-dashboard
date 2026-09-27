@@ -22,7 +22,7 @@ describe('nextPairPrice', () => {
       changePercent: 0,
       direction: 'flat',
       updatedAt: 1,
-      history: [100],
+      history: [{ time: 1, price: 100 }],
     })
   })
 
@@ -68,14 +68,14 @@ describe('nextPairPrice', () => {
     expect(current && nextPairPrice(current, ticker(50, 3))).toBeNull()
   })
 
-  it('remembers the session history, keeping only the latest points', () => {
-    const prices: [number, number][] = Array.from({ length: HISTORY_LENGTH + 5 }, (_, i) => [
+  it('keeps the whole session in a bounded history by thinning it out when full', () => {
+    const prices: [number, number][] = Array.from({ length: HISTORY_LENGTH + 1 }, (_, i) => [
       100 + i,
       i + 1,
     ])
     const history = replay(prices)?.history ?? []
-    expect(history).toHaveLength(HISTORY_LENGTH)
-    expect(history.at(-1)).toBe(100 + HISTORY_LENGTH + 4)
-    expect(history[0]).toBe(105)
+    expect(history.length).toBeLessThanOrEqual(HISTORY_LENGTH)
+    expect(history[0]).toEqual({ time: 1, price: 100 })
+    expect(history.at(-1)).toEqual({ time: HISTORY_LENGTH + 1, price: 100 + HISTORY_LENGTH })
   })
 })

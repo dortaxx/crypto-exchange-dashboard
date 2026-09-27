@@ -23,12 +23,33 @@
   text-overflow: ellipsis;
 }
 
+.label {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  min-width: 0;
+}
+
 .base {
   color: var(--text-muted);
 }
 
-.numeric,
-.trend {
+@media (max-width: 29.99rem) {
+  .assetInner {
+    gap: var(--space-2);
+  }
+
+  .label {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .base {
+    font-size: var(--text-xs);
+  }
+}
+
+.numeric {
   text-align: right;
 }
 
@@ -75,16 +96,6 @@
   from {
     color: color-mix(in srgb, var(--down) 45%, white);
     text-shadow: 0 0 10px color-mix(in srgb, var(--down) 75%, transparent);
-  }
-}
-
-.trend {
-  display: none;
-}
-
-@media (min-width: 48rem) {
-  .trend {
-    display: table-cell;
   }
 }
 

@@ -25,13 +25,18 @@ export type PriceAlert = {
   triggeredAt: number
 }
 
+export type PricePoint = {
+  time: number
+  price: number
+}
+
 export type PairPrice = {
   price: number
   startPrice: number
   changePercent: number
   direction: Direction
   updatedAt: number
-  history: readonly number[]
+  history: readonly PricePoint[]
 }
 
 export type ConnectionState =

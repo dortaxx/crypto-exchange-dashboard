@@ -28,6 +28,12 @@ export function formatTime(timestamp: number): string {
   return clockTime.format(timestamp)
 }
 
+const hourMinute = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' })
+
+export function formatShortTime(timestamp: number): string {
+  return hourMinute.format(timestamp)
+}
+
 export function formatPercent(percent: number): string {
   return signedPercent.format(percent / 100)
 }

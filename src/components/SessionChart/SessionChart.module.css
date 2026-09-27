@@ -1,0 +1,99 @@
+.panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.pair {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.symbol {
+  margin-left: var(--space-1);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.quote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  align-items: baseline;
+  margin-top: var(--space-1);
+}
+
+.price {
+  font-family: var(--font-figures);
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.unit {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.change {
+  display: inline-flex;
+  gap: 0.375rem;
+  align-items: center;
+  margin-left: var(--space-2);
+  font-family: var(--font-figures);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.change[data-trend='up'] {
+  color: var(--up);
+}
+
+.change[data-trend='down'] {
+  color: var(--down);
+}
+
+.open {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  color: var(--text-muted);
+  font-family: var(--font-figures);
+  font-size: var(--text-xs);
+}
+
+.open::before {
+  width: 1.25rem;
+  border-top: 1px dashed currentColor;
+  content: '';
+}
+
+.plot {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 15rem;
+}
+
+.plot > * {
+  flex: 1;
+}
+
+.waiting {
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

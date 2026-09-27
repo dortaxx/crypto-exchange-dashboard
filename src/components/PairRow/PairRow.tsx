@@ -1,9 +1,8 @@
-import { roundPercent } from '../../domain/alertCheck'
 import { formatPercent, formatPrice } from '../../domain/format'
+import { changeTrend } from '../../domain/trend'
 import type { Pair, PairPrice } from '../../domain/types'
 import { CoinIcon } from '../CoinIcon/CoinIcon'
 import { Skeleton } from '../Skeleton/Skeleton'
-import { Sparkline } from '../Sparkline/Sparkline'
 import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './PairRow.module.css'
 
@@ -16,13 +15,6 @@ type PairRowProps = {
   onHide: (symbol: string) => void
 }
 
-function trendOf(changePercent: number): 'up' | 'down' | 'flat' {
-  const shown = roundPercent(changePercent)
-  if (shown > 0) return 'up'
-  if (shown < 0) return 'down'
-  return 'flat'
-}
-
 export function PairRow({
   pair,
   price,
@@ -31,7 +23,7 @@ export function PairRow({
   onToggleFavorite,
   onHide,
 }: PairRowProps) {
-  const trend = price === undefined ? 'flat' : trendOf(price.changePercent)
+  const trend = price === undefined ? 'flat' : changeTrend(price.changePercent)
 
   return (
     <tr className={styles.row}>
@@ -53,8 +45,10 @@ export function PairRow({
             </svg>
           </button>
           <CoinIcon asset={pair.base} />
-          <span className={styles.name}>{pair.name}</span>
-          <span className={styles.base}>{pair.base}</span>
+          <span className={styles.label}>
+            <span className={styles.name}>{pair.name}</span>
+            <span className={styles.base}>{pair.base}</span>
+          </span>
         </span>
       </th>
       <td className={styles.numeric}>
@@ -74,13 +68,6 @@ export function PairRow({
             {trend !== 'flat' && <TrendIcon direction={trend} />}
             {formatPercent(price.changePercent)}
           </span>
-        )}
-      </td>
-      <td className={styles.trend}>
-        {price === undefined || price.history.length < 2 ? (
-          <Skeleton width="5rem" height="1.5rem" delayMs={loadingDelayMs} />
-        ) : (
-          <Sparkline values={price.history} label={`${pair.name} price trend this session`} />
         )}
       </td>
       <td className={styles.actions}>
