@@ -5,6 +5,7 @@ import { SectionHeading } from './components/SectionHeading/SectionHeading'
 import { StatStrip } from './components/StatStrip/StatStrip'
 import { DEFAULT_PAIRS } from './config/pairs'
 import { PairTableContainer } from './containers/PairTableContainer'
+import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
 
 const sessionStats = [
@@ -16,6 +17,7 @@ const sessionStats = [
 
 export function App() {
   useTickerSnapshot(DEFAULT_PAIRS)
+  useMarketFeed(DEFAULT_PAIRS)
 
   return (
     <>

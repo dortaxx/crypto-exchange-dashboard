@@ -1,17 +1,20 @@
 import { create } from 'zustand'
 import { nextPairPrice } from '../domain/pairPrice'
-import type { LoadStatus, PairPrice, Ticker } from '../domain/types'
+import type { ConnectionState, LoadStatus, PairPrice, Ticker } from '../domain/types'
 
 type MarketState = {
   prices: Readonly<Record<string, PairPrice>>
   snapshotStatus: LoadStatus
+  connection: ConnectionState
   applyTickers: (tickers: readonly Ticker[]) => void
   setSnapshotStatus: (status: LoadStatus) => void
+  setConnection: (connection: ConnectionState) => void
 }
 
 export const useMarketStore = create<MarketState>()((set) => ({
   prices: {},
   snapshotStatus: 'loading',
+  connection: { status: 'connecting' },
   applyTickers: (tickers) =>
     set((state) => {
       const updated: Record<string, PairPrice> = {}
@@ -23,4 +26,5 @@ export const useMarketStore = create<MarketState>()((set) => ({
       return { prices: { ...state.prices, ...updated } }
     }),
   setSnapshotStatus: (snapshotStatus) => set({ snapshotStatus }),
+  setConnection: (connection) => set({ connection }),
 }))
