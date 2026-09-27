@@ -1,10 +1,12 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { PAIR_CATALOG } from '../config/pairs'
+import { DEFAULT_SYMBOLS, PAIR_CATALOG } from '../config/pairs'
 import type { SortKey, ViewMode } from '../domain/types'
 import { sanitizePreferences, type SavedPreferences } from './sanitizePreferences'
 
 type PreferencesState = SavedPreferences & {
+  addPair: (symbol: string) => void
+  removePair: (symbol: string) => void
   toggleFavorite: (symbol: string) => void
   toggleHidden: (symbol: string) => void
   setView: (view: ViewMode) => void
@@ -13,6 +15,7 @@ type PreferencesState = SavedPreferences & {
 }
 
 const DEFAULTS: SavedPreferences = {
+  pairs: [...DEFAULT_SYMBOLS],
   favorites: [],
   hidden: [],
   view: 'all',
@@ -22,6 +25,10 @@ const DEFAULTS: SavedPreferences = {
 
 const KNOWN_SYMBOLS = new Set(PAIR_CATALOG.map((pair) => pair.symbol))
 
+function without(list: readonly string[], item: string): string[] {
+  return list.filter((entry) => entry !== item)
+}
+
 function toggle(list: readonly string[], item: string): string[] {
   return list.includes(item) ? list.filter((entry) => entry !== item) : [...list, item]
 }
@@ -30,6 +37,22 @@ export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set) => ({
       ...DEFAULTS,
+      addPair: (symbol) =>
+        set((state) =>
+          state.pairs.includes(symbol) || !KNOWN_SYMBOLS.has(symbol)
+            ? state
+            : { pairs: [...state.pairs, symbol] },
+        ),
+      removePair: (symbol) =>
+        set((state) =>
+          state.pairs.length <= 1 || !state.pairs.includes(symbol)
+            ? state
+            : {
+                pairs: without(state.pairs, symbol),
+                favorites: without(state.favorites, symbol),
+                hidden: without(state.hidden, symbol),
+              },
+        ),
       toggleFavorite: (symbol) => set((state) => ({ favorites: toggle(state.favorites, symbol) })),
       toggleHidden: (symbol) => set((state) => ({ hidden: toggle(state.hidden, symbol) })),
       setView: (view) => set({ view }),
@@ -45,7 +68,15 @@ export const usePreferencesStore = create<PreferencesState>()(
       name: 'crypto-dashboard:preferences',
       version: 1,
       storage: createJSONStorage(() => localStorage),
-      partialize: ({ favorites, hidden, view, sortKey, sortDirection }): SavedPreferences => ({
+      partialize: ({
+        pairs,
+        favorites,
+        hidden,
+        view,
+        sortKey,
+        sortDirection,
+      }): SavedPreferences => ({
+        pairs,
         favorites,
         hidden,
         view,

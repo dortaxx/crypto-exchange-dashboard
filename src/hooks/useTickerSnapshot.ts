@@ -4,27 +4,27 @@ import { fetchTickerSnapshot } from '../services/binanceRest'
 import { useMarketStore } from '../store/marketStore'
 
 export function useTickerSnapshot(pairs: readonly Pair[]) {
-  const applyTickers = useMarketStore((state) => state.applyTickers)
-  const setSnapshotStatus = useMarketStore((state) => state.setSnapshotStatus)
-
   useEffect(() => {
-    const controller = new AbortController()
-    setSnapshotStatus('loading')
+    const { prices, applyTickers, setSnapshotStatus } = useMarketStore.getState()
+    const missing = pairs.map((pair) => pair.symbol).filter((symbol) => !(symbol in prices))
+    if (missing.length === 0) return
 
-    fetchTickerSnapshot(
-      pairs.map((pair) => pair.symbol),
-      controller.signal,
-    )
+    const controller = new AbortController()
+    const firstLoad = Object.keys(prices).length === 0
+    if (firstLoad) setSnapshotStatus('loading')
+
+    fetchTickerSnapshot(missing, controller.signal)
       .then((tickers) => {
         if (controller.signal.aborted) return
         applyTickers(tickers)
-        setSnapshotStatus('ready')
       })
       .catch(() => {
         if (controller.signal.aborted) return
-        setSnapshotStatus('error')
+        if (Object.keys(useMarketStore.getState().prices).length === 0) setSnapshotStatus('error')
       })
 
-    return () => controller.abort()
-  }, [pairs, applyTickers, setSnapshotStatus])
+    return () => {
+      controller.abort()
+    }
+  }, [pairs])
 }

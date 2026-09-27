@@ -21,9 +21,17 @@ export function ConverterContainer({ pairs }: ConverterContainerProps) {
     ],
     [pairs],
   )
-  const [from, setFrom] = useState(assets[0]?.code ?? QUOTE_ASSET)
-  const [to, setTo] = useState(assets[1]?.code ?? QUOTE_ASSET)
+  const [fromChoice, setFrom] = useState(assets[0]?.code ?? QUOTE_ASSET)
+  const [toChoice, setTo] = useState(assets[1]?.code ?? QUOTE_ASSET)
   const [amount, setAmount] = useState('1')
+
+  const available = (code: string) => assets.some((asset) => asset.code === code)
+  const from = available(fromChoice)
+    ? fromChoice
+    : (assets.find((asset) => asset.code !== toChoice)?.code ?? QUOTE_ASSET)
+  const to = available(toChoice)
+    ? toChoice
+    : (assets.find((asset) => asset.code !== from)?.code ?? QUOTE_ASSET)
 
   const fromPrice = useMarketStore((state) => priceInUsdt(from, state.prices))
   const toPrice = useMarketStore((state) => priceInUsdt(to, state.prices))

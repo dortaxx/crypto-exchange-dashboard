@@ -1,7 +1,6 @@
 import styles from './App.module.css'
 import { AppHeader } from './components/AppHeader/AppHeader'
 import { Card } from './components/Card/Card'
-import { DEFAULT_PAIRS } from './config/pairs'
 import { AlertsContainer } from './containers/AlertsContainer'
 import { ConnectionStatusContainer } from './containers/ConnectionStatusContainer'
 import { ConverterContainer } from './containers/ConverterContainer'
@@ -10,10 +9,12 @@ import { SessionChartContainer } from './containers/SessionChartContainer'
 import { StatsContainer } from './containers/StatsContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
+import { useTrackedPairs } from './hooks/useTrackedPairs'
 
 export function App() {
-  useTickerSnapshot(DEFAULT_PAIRS)
-  const { retry } = useMarketFeed(DEFAULT_PAIRS)
+  const pairs = useTrackedPairs()
+  useTickerSnapshot(pairs)
+  const { retry } = useMarketFeed(pairs)
 
   return (
     <>
@@ -25,16 +26,16 @@ export function App() {
             Live crypto prices
           </h1>
           <p className={styles.subtitle}>Real-time spot prices from Binance, quoted in USDT.</p>
-          <StatsContainer pairs={DEFAULT_PAIRS} />
+          <StatsContainer pairs={pairs} />
         </section>
 
         <div className={styles.workspace}>
           <Card titleId="chart-title" title="Session chart" className={styles.chartCard}>
-            <SessionChartContainer pairs={DEFAULT_PAIRS} />
+            <SessionChartContainer pairs={pairs} />
           </Card>
           <div className={styles.side}>
             <Card titleId="converter-title" title="Converter">
-              <ConverterContainer pairs={DEFAULT_PAIRS} />
+              <ConverterContainer pairs={pairs} />
             </Card>
             <Card titleId="alerts-title" title="Alerts">
               <AlertsContainer />
@@ -42,7 +43,7 @@ export function App() {
           </div>
         </div>
 
-        <MarketsContainer pairs={DEFAULT_PAIRS} />
+        <MarketsContainer pairs={pairs} />
       </main>
 
       <footer className={styles.footer}>

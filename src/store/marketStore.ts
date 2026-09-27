@@ -13,6 +13,7 @@ type MarketState = {
   snapshotStatus: LoadStatus
   connection: ConnectionState
   applyTickers: (tickers: readonly Ticker[], muted?: ReadonlySet<string>) => void
+  retainPairs: (symbols: readonly string[]) => void
   dismissAlert: (id: string) => void
   setSnapshotStatus: (status: LoadStatus) => void
   setConnection: (connection: ConnectionState) => void
@@ -44,12 +45,21 @@ export const useMarketStore = create<MarketState>()((set) => ({
 
       return {
         prices: { ...state.prices, ...updated },
+        snapshotStatus: 'ready',
         alertZones,
         alerts:
           newAlerts.length === 0
             ? state.alerts
             : [...newAlerts, ...state.alerts].slice(0, MAX_ALERTS),
       }
+    }),
+  retainPairs: (symbols) =>
+    set((state) => {
+      const keep = new Set(symbols)
+      if (Object.keys(state.prices).every((symbol) => keep.has(symbol))) return state
+      const kept = <T>(record: Readonly<Record<string, T>>) =>
+        Object.fromEntries(Object.entries(record).filter(([symbol]) => keep.has(symbol)))
+      return { prices: kept(state.prices), alertZones: kept(state.alertZones) }
     }),
   dismissAlert: (id) =>
     set((state) => ({ alerts: state.alerts.filter((alert) => alert.id !== id) })),

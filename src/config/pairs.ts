@@ -28,8 +28,14 @@ export const PAIR_CATALOG: readonly Pair[] = [
   usdtPair('FIL', 'Filecoin'),
 ]
 
-const DEFAULT_SYMBOLS: readonly string[] = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT']
+export const DEFAULT_SYMBOLS: readonly string[] = [
+  'BTCUSDT',
+  'ETHUSDT',
+  'SOLUSDT',
+  'BNBUSDT',
+  'XRPUSDT',
+]
 
-export const DEFAULT_PAIRS: readonly Pair[] = PAIR_CATALOG.filter((pair) =>
-  DEFAULT_SYMBOLS.includes(pair.symbol),
-)
+export function pairsFor(symbols: readonly string[]): Pair[] {
+  return symbols.flatMap((symbol) => PAIR_CATALOG.find((pair) => pair.symbol === symbol) ?? [])
+}

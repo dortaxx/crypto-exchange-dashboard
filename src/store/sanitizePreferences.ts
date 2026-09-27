@@ -1,6 +1,7 @@
 import type { SortDirection, SortKey, ViewMode } from '../domain/types'
 
 export type SavedPreferences = {
+  pairs: string[]
   favorites: string[]
   hidden: string[]
   view: ViewMode
@@ -30,9 +31,13 @@ export function sanitizePreferences(
   known: ReadonlySet<string>,
 ): SavedPreferences {
   if (!isRecord(saved)) return defaults
+  const savedPairs = knownSymbols(saved.pairs, known)
+  const pairs = savedPairs.length > 0 ? savedPairs : defaults.pairs
+  const tracked = new Set(pairs)
   return {
-    favorites: knownSymbols(saved.favorites, known),
-    hidden: knownSymbols(saved.hidden, known),
+    pairs,
+    favorites: knownSymbols(saved.favorites, tracked),
+    hidden: knownSymbols(saved.hidden, tracked),
     view: oneOf(saved.view, ['all', 'favorites'], defaults.view),
     sortKey: oneOf(saved.sortKey, ['name', 'price', 'change'], defaults.sortKey),
     sortDirection: oneOf(saved.sortDirection, ['asc', 'desc'], defaults.sortDirection),

@@ -145,6 +145,7 @@ export class BinanceSocket {
       case 'ticker':
         this.attempt = 0
         this.resetWatchdog()
+        if (!this.symbols.has(message.ticker.symbol)) return
         for (const listener of this.tickerListeners) listener(message.ticker)
         return
       case 'error':

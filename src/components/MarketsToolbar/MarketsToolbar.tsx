@@ -7,9 +7,12 @@ type MarketsToolbarProps = {
   hiddenCount: number
   hiddenOpen: boolean
   hiddenPanelId: string
+  pairsOpen: boolean
+  pairsPanelId: string
   query: string
   onViewChange: (view: ViewMode) => void
   onToggleHidden: () => void
+  onTogglePairs: () => void
   onQueryChange: (query: string) => void
 }
 
@@ -19,9 +22,12 @@ export function MarketsToolbar({
   hiddenCount,
   hiddenOpen,
   hiddenPanelId,
+  pairsOpen,
+  pairsPanelId,
   query,
   onViewChange,
   onToggleHidden,
+  onTogglePairs,
   onQueryChange,
 }: MarketsToolbarProps) {
   return (
@@ -69,17 +75,28 @@ export function MarketsToolbar({
         />
       </label>
 
-      {hiddenCount > 0 && (
+      <div className={styles.actions}>
+        {hiddenCount > 0 && (
+          <button
+            type="button"
+            className={styles.panelToggle}
+            aria-expanded={hiddenOpen}
+            aria-controls={hiddenPanelId}
+            onClick={onToggleHidden}
+          >
+            Hidden ({hiddenCount})
+          </button>
+        )}
         <button
           type="button"
-          className={styles.hiddenToggle}
-          aria-expanded={hiddenOpen}
-          aria-controls={hiddenPanelId}
-          onClick={onToggleHidden}
+          className={styles.panelToggle}
+          aria-expanded={pairsOpen}
+          aria-controls={pairsPanelId}
+          onClick={onTogglePairs}
         >
-          Hidden ({hiddenCount})
+          Edit pairs
         </button>
-      )}
+      </div>
     </div>
   )
 }

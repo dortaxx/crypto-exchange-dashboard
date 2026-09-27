@@ -132,6 +132,18 @@ describe('connecting and subscribing', () => {
     expect(tickers).toEqual([{ symbol: 'BTCUSDT', price: 84028.01, updatedAt: 1790435739015 }])
   })
 
+  it('ignores late prices for a pair it has stopped following', () => {
+    const { phone, tickers, latestSocket } = setup()
+    phone.setSymbols(['BTCUSDT', 'ETHUSDT'])
+    phone.connect()
+    latestSocket().simulateOpen()
+
+    phone.setSymbols(['BTCUSDT'])
+    latestSocket().simulateMessage(priceMessage('ETHUSDT', '2700.5'))
+
+    expect(tickers).toEqual([])
+  })
+
   it('sends only the difference when pairs change while connected, without reconnecting', () => {
     const { phone, latestSocket } = setup()
     phone.setSymbols(['BTCUSDT', 'ETHUSDT'])

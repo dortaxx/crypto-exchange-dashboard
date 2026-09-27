@@ -8,6 +8,7 @@ const FLUSH_INTERVAL_MS = 250
 
 export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
   const socketRef = useRef<BinanceSocket | null>(null)
+  const trackedRef = useRef<ReadonlySet<string>>(new Set())
 
   useEffect(() => {
     const { applyTickers, setConnection } = useMarketStore.getState()
@@ -21,8 +22,11 @@ export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
     })
     const flushTimer = setInterval(() => {
       if (pending.size === 0) return
-      applyTickers([...pending.values()], new Set(usePreferencesStore.getState().hidden))
+      const tickers = [...pending.values()].filter((ticker) =>
+        trackedRef.current.has(ticker.symbol),
+      )
       pending.clear()
+      applyTickers(tickers, new Set(usePreferencesStore.getState().hidden))
     }, FLUSH_INTERVAL_MS)
 
     socket.connect()
@@ -37,7 +41,10 @@ export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
   }, [])
 
   useEffect(() => {
-    socketRef.current?.setSymbols(pairs.map((pair) => pair.symbol))
+    const symbols = pairs.map((pair) => pair.symbol)
+    trackedRef.current = new Set(symbols)
+    socketRef.current?.setSymbols(symbols)
+    useMarketStore.getState().retainPairs(symbols)
   }, [pairs])
 
   const retry = useCallback(() => {
