@@ -87,3 +87,60 @@
     display: table-cell;
   }
 }
+
+.star,
+.hide {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.star:hover,
+.hide:hover {
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.star svg,
+.hide svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.star[aria-pressed='true'] {
+  color: var(--warn);
+}
+
+.star[aria-pressed='true'] svg {
+  fill: currentColor;
+}
+
+.actions {
+  width: 2.5rem;
+  text-align: right;
+}
+
+.hide {
+  opacity: 0.55;
+}
+
+.row:hover .hide,
+.hide:focus-visible {
+  opacity: 1;
+}

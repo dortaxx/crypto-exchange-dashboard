@@ -6,9 +6,19 @@ type PairTableProps = {
   pairs: readonly Pair[]
   prices: Readonly<Record<string, PairPrice>>
   status: LoadStatus
+  favorites: ReadonlySet<string>
+  onToggleFavorite: (symbol: string) => void
+  onHide: (symbol: string) => void
 }
 
-export function PairTable({ pairs, prices, status }: PairTableProps) {
+export function PairTable({
+  pairs,
+  prices,
+  status,
+  favorites,
+  onToggleFavorite,
+  onHide,
+}: PairTableProps) {
   return (
     <>
       <p className={status === 'error' ? styles.error : 'visually-hidden'} role="status">
@@ -30,6 +40,9 @@ export function PairTable({ pairs, prices, status }: PairTableProps) {
             <th scope="col" className={styles.trend}>
               Trend
             </th>
+            <th scope="col" className={styles.actions}>
+              <span className="visually-hidden">Actions</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -38,7 +51,10 @@ export function PairTable({ pairs, prices, status }: PairTableProps) {
               key={pair.symbol}
               pair={pair}
               price={prices[pair.symbol]}
+              isFavorite={favorites.has(pair.symbol)}
               loadingDelayMs={index * 120}
+              onToggleFavorite={onToggleFavorite}
+              onHide={onHide}
             />
           ))}
         </tbody>

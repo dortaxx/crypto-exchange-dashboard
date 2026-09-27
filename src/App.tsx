@@ -1,12 +1,11 @@
 import styles from './App.module.css'
 import { AppHeader } from './components/AppHeader/AppHeader'
 import { Card } from './components/Card/Card'
-import { SectionHeading } from './components/SectionHeading/SectionHeading'
 import { DEFAULT_PAIRS } from './config/pairs'
 import { AlertsContainer } from './containers/AlertsContainer'
 import { ConnectionStatusContainer } from './containers/ConnectionStatusContainer'
 import { ConverterContainer } from './containers/ConverterContainer'
-import { PairTableContainer } from './containers/PairTableContainer'
+import { MarketsContainer } from './containers/MarketsContainer'
 import { StatsContainer } from './containers/StatsContainer'
 import { useMarketFeed } from './hooks/useMarketFeed'
 import { useTickerSnapshot } from './hooks/useTickerSnapshot'
@@ -37,10 +36,7 @@ export function App() {
           </Card>
         </div>
 
-        <section aria-labelledby="markets-heading">
-          <SectionHeading id="markets-heading" title="Markets" />
-          <PairTableContainer pairs={DEFAULT_PAIRS} />
-        </section>
+        <MarketsContainer pairs={DEFAULT_PAIRS} />
       </main>
 
       <footer className={styles.footer}>

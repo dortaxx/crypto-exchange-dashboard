@@ -37,3 +37,7 @@
     display: table-cell;
   }
 }
+
+.table .actions {
+  width: 2.5rem;
+}

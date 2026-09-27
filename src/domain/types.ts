@@ -39,3 +39,7 @@ export type ConnectionState =
   | { status: 'reconnecting'; attempt: number; retryInMs: number }
   | { status: 'disconnected'; reason: 'stopped' | 'offline' }
   | { status: 'error'; message: string }
+
+export type ViewMode = 'all' | 'favorites'
+export type SortKey = 'name' | 'price' | 'change'
+export type SortDirection = 'asc' | 'desc'

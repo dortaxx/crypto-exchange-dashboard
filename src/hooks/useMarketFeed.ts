@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import type { Pair, Ticker } from '../domain/types'
 import { BinanceSocket } from '../services/binanceSocket'
 import { useMarketStore } from '../store/marketStore'
+import { usePreferencesStore } from '../store/preferencesStore'
 
 const FLUSH_INTERVAL_MS = 250
 
@@ -20,7 +21,7 @@ export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
     })
     const flushTimer = setInterval(() => {
       if (pending.size === 0) return
-      applyTickers([...pending.values()])
+      applyTickers([...pending.values()], new Set(usePreferencesStore.getState().hidden))
       pending.clear()
     }, FLUSH_INTERVAL_MS)
 

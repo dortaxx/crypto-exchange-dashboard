@@ -12,7 +12,7 @@ type MarketState = {
   alerts: readonly PriceAlert[]
   snapshotStatus: LoadStatus
   connection: ConnectionState
-  applyTickers: (tickers: readonly Ticker[]) => void
+  applyTickers: (tickers: readonly Ticker[], muted?: ReadonlySet<string>) => void
   dismissAlert: (id: string) => void
   setSnapshotStatus: (status: LoadStatus) => void
   setConnection: (connection: ConnectionState) => void
@@ -24,7 +24,7 @@ export const useMarketStore = create<MarketState>()((set) => ({
   alerts: [],
   snapshotStatus: 'loading',
   connection: { status: 'connecting' },
-  applyTickers: (tickers) =>
+  applyTickers: (tickers, muted) =>
     set((state) => {
       const updated: Record<string, PairPrice> = {}
       for (const ticker of tickers) {
@@ -39,7 +39,7 @@ export const useMarketStore = create<MarketState>()((set) => ({
       for (const [symbol, price] of Object.entries(updated)) {
         const result = checkAlert(symbol, alertZones[symbol] ?? 'calm', price, now)
         alertZones[symbol] = result.zone
-        if (result.alert) newAlerts.push(result.alert)
+        if (result.alert && !muted?.has(symbol)) newAlerts.push(result.alert)
       }
 
       return {
