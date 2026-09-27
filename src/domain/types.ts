@@ -17,5 +17,5 @@ export type ConnectionState =
   | { status: 'connecting' }
   | { status: 'connected' }
   | { status: 'reconnecting'; attempt: number; retryInMs: number }
-  | { status: 'disconnected' }
+  | { status: 'disconnected'; reason: 'stopped' | 'offline' }
   | { status: 'error'; message: string }

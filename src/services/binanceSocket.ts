@@ -5,29 +5,63 @@ import { BINANCE_STREAM_URL, buildRequest, parseSocketMessage } from './binanceP
 type StateListener = (state: ConnectionState) => void
 type TickerListener = (ticker: Ticker) => void
 
+export type NetworkStatus = {
+  isOnline: () => boolean
+  onChange: (listener: (online: boolean) => void) => () => void
+}
+
+const browserNetwork: NetworkStatus = {
+  isOnline: () => navigator.onLine,
+  onChange: (listener) => {
+    const handleOnline = () => {
+      listener(true)
+    }
+    const handleOffline = () => {
+      listener(false)
+    }
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  },
+}
+
 type BinanceSocketOptions = {
   url?: string
   maxAttempts?: number
+  staleAfterMs?: number
   random?: () => number
+  createSocket?: (url: string) => WebSocket
+  network?: NetworkStatus
 }
 
 export class BinanceSocket {
   private readonly url: string
   private readonly maxAttempts: number
+  private readonly staleAfterMs: number
   private readonly random: () => number
+  private readonly createSocket: (url: string) => WebSocket
+  private readonly network: NetworkStatus
   private socket: WebSocket | null = null
   private retryTimer: ReturnType<typeof setTimeout> | null = null
+  private watchdogTimer: ReturnType<typeof setTimeout> | null = null
+  private stopWatchingNetwork: (() => void) | null = null
   private attempt = 0
   private requestId = 0
   private symbols = new Set<string>()
-  private state: ConnectionState = { status: 'disconnected' }
+  private state: ConnectionState = { status: 'disconnected', reason: 'stopped' }
   private readonly stateListeners = new Set<StateListener>()
   private readonly tickerListeners = new Set<TickerListener>()
 
   constructor(options: BinanceSocketOptions = {}) {
     this.url = options.url ?? BINANCE_STREAM_URL
     this.maxAttempts = options.maxAttempts ?? 10
+    this.staleAfterMs = options.staleAfterMs ?? 10_000
     this.random = options.random ?? Math.random
+    this.createSocket = options.createSocket ?? ((url) => new WebSocket(url))
+    this.network = options.network ?? browserNetwork
   }
 
   getState(): ConnectionState {
@@ -57,24 +91,31 @@ export class BinanceSocket {
     if (this.socket?.readyState !== WebSocket.OPEN) return
     if (removed.length > 0) this.send('UNSUBSCRIBE', removed)
     if (added.length > 0) this.send('SUBSCRIBE', added)
+    this.resetWatchdog()
   }
 
   connect(): void {
     if (this.socket !== null || this.retryTimer !== null) return
+    this.stopWatchingNetwork ??= this.network.onChange(this.handleNetworkChange)
     this.attempt = 0
+
+    if (!this.network.isOnline()) {
+      this.setState({ status: 'disconnected', reason: 'offline' })
+      return
+    }
     this.open()
   }
 
   disconnect(): void {
+    this.stopWatchingNetwork?.()
+    this.stopWatchingNetwork = null
     this.cancelRetry()
-    const socket = this.socket
-    this.socket = null
-    socket?.close(1000, 'Closed by the app')
-    this.setState({ status: 'disconnected' })
+    this.releaseSocket(1000, 'Closed by the app')
+    this.setState({ status: 'disconnected', reason: 'stopped' })
   }
 
   private open(): void {
-    const socket = new WebSocket(this.url)
+    const socket = this.createSocket(this.url)
     this.socket = socket
     this.setState({ status: 'connecting' })
 
@@ -82,6 +123,7 @@ export class BinanceSocket {
       if (socket !== this.socket) return
       this.setState({ status: 'connected' })
       if (this.symbols.size > 0) this.send('SUBSCRIBE', [...this.symbols])
+      this.resetWatchdog()
     }
 
     socket.onmessage = (event: MessageEvent) => {
@@ -92,6 +134,7 @@ export class BinanceSocket {
     socket.onclose = () => {
       if (socket !== this.socket) return
       this.socket = null
+      this.clearWatchdog()
       this.scheduleReconnect()
     }
   }
@@ -101,6 +144,7 @@ export class BinanceSocket {
     switch (message.kind) {
       case 'ticker':
         this.attempt = 0
+        this.resetWatchdog()
         for (const listener of this.tickerListeners) listener(message.ticker)
         return
       case 'error':
@@ -115,6 +159,42 @@ export class BinanceSocket {
   private send(method: 'SUBSCRIBE' | 'UNSUBSCRIBE', symbols: readonly string[]): void {
     this.requestId += 1
     this.socket?.send(buildRequest(method, symbols, this.requestId))
+  }
+
+  private resetWatchdog(): void {
+    this.clearWatchdog()
+    if (this.symbols.size === 0) return
+    this.watchdogTimer = setTimeout(() => {
+      this.watchdogTimer = null
+      this.releaseSocket(4000, 'No data received')
+      this.scheduleReconnect()
+    }, this.staleAfterMs)
+  }
+
+  private clearWatchdog(): void {
+    if (this.watchdogTimer === null) return
+    clearTimeout(this.watchdogTimer)
+    this.watchdogTimer = null
+  }
+
+  private releaseSocket(code: number, reason: string): void {
+    this.clearWatchdog()
+    const socket = this.socket
+    this.socket = null
+    socket?.close(code, reason)
+  }
+
+  private readonly handleNetworkChange = (online: boolean): void => {
+    if (!online) {
+      this.cancelRetry()
+      this.releaseSocket(1000, 'Browser went offline')
+      this.setState({ status: 'disconnected', reason: 'offline' })
+      return
+    }
+    if (this.state.status === 'disconnected' && this.state.reason === 'offline') {
+      this.attempt = 0
+      this.open()
+    }
   }
 
   private scheduleReconnect(): void {
