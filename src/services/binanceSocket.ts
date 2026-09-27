@@ -1,8 +1,9 @@
-import type { ConnectionState } from '../domain/types'
+import type { ConnectionState, Ticker } from '../domain/types'
 import { backoffDelay } from './backoff'
-import { BINANCE_STREAM_URL } from './binanceProtocol'
+import { BINANCE_STREAM_URL, buildRequest, parseSocketMessage } from './binanceProtocol'
 
 type StateListener = (state: ConnectionState) => void
+type TickerListener = (ticker: Ticker) => void
 
 type BinanceSocketOptions = {
   url?: string
@@ -17,8 +18,11 @@ export class BinanceSocket {
   private socket: WebSocket | null = null
   private retryTimer: ReturnType<typeof setTimeout> | null = null
   private attempt = 0
+  private requestId = 0
+  private symbols = new Set<string>()
   private state: ConnectionState = { status: 'disconnected' }
   private readonly stateListeners = new Set<StateListener>()
+  private readonly tickerListeners = new Set<TickerListener>()
 
   constructor(options: BinanceSocketOptions = {}) {
     this.url = options.url ?? BINANCE_STREAM_URL
@@ -35,6 +39,24 @@ export class BinanceSocket {
     return () => {
       this.stateListeners.delete(listener)
     }
+  }
+
+  onTicker(listener: TickerListener): () => void {
+    this.tickerListeners.add(listener)
+    return () => {
+      this.tickerListeners.delete(listener)
+    }
+  }
+
+  setSymbols(symbols: readonly string[]): void {
+    const next = new Set(symbols)
+    const added = [...next].filter((symbol) => !this.symbols.has(symbol))
+    const removed = [...this.symbols].filter((symbol) => !next.has(symbol))
+    this.symbols = next
+
+    if (this.socket?.readyState !== WebSocket.OPEN) return
+    if (removed.length > 0) this.send('UNSUBSCRIBE', removed)
+    if (added.length > 0) this.send('SUBSCRIBE', added)
   }
 
   connect(): void {
@@ -58,8 +80,13 @@ export class BinanceSocket {
 
     socket.onopen = () => {
       if (socket !== this.socket) return
-      this.attempt = 0
       this.setState({ status: 'connected' })
+      if (this.symbols.size > 0) this.send('SUBSCRIBE', [...this.symbols])
+    }
+
+    socket.onmessage = (event: MessageEvent) => {
+      if (socket !== this.socket) return
+      this.handleMessage(event.data)
     }
 
     socket.onclose = () => {
@@ -67,6 +94,27 @@ export class BinanceSocket {
       this.socket = null
       this.scheduleReconnect()
     }
+  }
+
+  private handleMessage(data: unknown): void {
+    const message = parseSocketMessage(data)
+    switch (message.kind) {
+      case 'ticker':
+        this.attempt = 0
+        for (const listener of this.tickerListeners) listener(message.ticker)
+        return
+      case 'error':
+        console.warn(`Binance rejected request ${message.id ?? '?'}: ${message.message}`)
+        return
+      case 'ack':
+      case 'ignored':
+        return
+    }
+  }
+
+  private send(method: 'SUBSCRIBE' | 'UNSUBSCRIBE', symbols: readonly string[]): void {
+    this.requestId += 1
+    this.socket?.send(buildRequest(method, symbols, this.requestId))
   }
 
   private scheduleReconnect(): void {
