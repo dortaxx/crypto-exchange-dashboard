@@ -1,5 +1,3 @@
-import { useRef } from 'react'
-import { focusAfterRemoval } from '../focusAfterRemoval'
 import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './AlertList.module.css'
 
@@ -13,29 +11,23 @@ export type AlertView = {
 
 type AlertListProps = {
   alerts: readonly AlertView[]
-  waitingTargets: number
   alertAtPercent: number
-  onDismiss: (id: string) => void
 }
 
-export function AlertList({ alerts, waitingTargets, alertAtPercent, onDismiss }: AlertListProps) {
-  const listRef = useRef<HTMLUListElement>(null)
-  const regionRef = useRef<HTMLDivElement>(null)
-
+export function AlertList({ alerts, alertAtPercent }: AlertListProps) {
   return (
-    <div ref={regionRef} tabIndex={-1} aria-live="polite">
+    <div aria-live="polite">
       {alerts.length === 0 ? (
         <>
           <p className={styles.empty}>No alerts yet</p>
           <p className={styles.hint}>
-            {waitingTargets > 0
-              ? `${waitingTargets} price ${waitingTargets === 1 ? 'target is' : 'targets are'} waiting. Alerts appear here when a target is reached, or when a pair moves ${alertAtPercent}% since you opened the page.`
-              : `Pairs that move ${alertAtPercent}% or more since you opened the page, and price targets you set below, show up here.`}
+            Pairs that move {alertAtPercent}% or more since you opened the page, and price targets
+            you set below, show up here.
           </p>
         </>
       ) : (
-        <ul ref={listRef} className={styles.list}>
-          {alerts.map((alert, index) => (
+        <ul className={styles.list}>
+          {alerts.map((alert) => (
             <li key={alert.id} className={styles.alert} data-direction={alert.direction}>
               <span className={styles.icon}>
                 <TrendIcon direction={alert.direction} />
@@ -46,23 +38,6 @@ export function AlertList({ alerts, waitingTargets, alertAtPercent, onDismiss }:
                   {alert.prices} · {alert.time}
                 </p>
               </div>
-              <button
-                type="button"
-                className={styles.dismiss}
-                data-action="dismiss"
-                aria-label={`Dismiss: ${alert.message}`}
-                onClick={() => {
-                  onDismiss(alert.id)
-                  focusAfterRemoval(
-                    listRef.current,
-                    '[data-action="dismiss"]',
-                    index,
-                    regionRef.current,
-                  )
-                }}
-              >
-                ×
-              </button>
             </li>
           ))}
         </ul>

@@ -4,7 +4,6 @@ import { ALERT_AT_PERCENT } from '../domain/alerts'
 import { formatPrice, formatTime } from '../domain/format'
 import type { PriceAlert } from '../domain/types'
 import { useMarketStore } from '../store/marketStore'
-import { usePreferencesStore } from '../store/preferencesStore'
 
 function toView(alert: PriceAlert): AlertView {
   const pair = PAIR_CATALOG.find((candidate) => candidate.symbol === alert.symbol)
@@ -33,15 +32,6 @@ function toView(alert: PriceAlert): AlertView {
 
 export function AlertsContainer() {
   const alerts = useMarketStore((state) => state.alerts)
-  const dismissAlert = useMarketStore((state) => state.dismissAlert)
-  const waitingTargets = usePreferencesStore((state) => state.targets.length)
 
-  return (
-    <AlertList
-      alerts={alerts.map(toView)}
-      waitingTargets={waitingTargets}
-      alertAtPercent={ALERT_AT_PERCENT}
-      onDismiss={dismissAlert}
-    />
-  )
+  return <AlertList alerts={alerts.map(toView)} alertAtPercent={ALERT_AT_PERCENT} />
 }

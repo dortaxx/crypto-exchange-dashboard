@@ -20,7 +20,7 @@
 
 .alert {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-3);
   align-items: start;
   padding: var(--space-3);
@@ -54,23 +54,6 @@
   font-family: var(--font-figures);
   font-size: var(--text-xs);
   color: var(--text-muted);
-}
-
-.dismiss {
-  width: 1.75rem;
-  height: 1.75rem;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: var(--text-lg);
-  line-height: 1;
-  cursor: pointer;
-}
-
-.dismiss:hover {
-  background: var(--line);
-  color: var(--text);
 }
 
 @keyframes arrive {

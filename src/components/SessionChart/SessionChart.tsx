@@ -1,10 +1,9 @@
 import { formatPrice } from '../../domain/format'
 import { changeTrend } from '../../domain/trend'
 import type { Pair, PairPrice } from '../../domain/types'
-import { PairSwitcher } from '../PairSwitcher/PairSwitcher'
+import { CoinSelect } from '../CoinSelect/CoinSelect'
 import { PercentChange } from '../PercentChange/PercentChange'
 import { PriceChart } from '../PriceChart/PriceChart'
-import { Skeleton } from '../Skeleton/Skeleton'
 import styles from './SessionChart.module.css'
 
 type SessionChartProps = {
@@ -12,47 +11,38 @@ type SessionChartProps = {
   pair: Pair
   price: PairPrice | undefined
   unavailable: boolean
-  onSelect: (symbol: string) => void
+  onSelect: (base: string) => void
 }
 
 export function SessionChart({ pairs, pair, price, unavailable, onSelect }: SessionChartProps) {
-  const trend = price === undefined ? 'flat' : changeTrend(price.changePercent)
-
   return (
     <div className={styles.panel}>
-      <PairSwitcher pairs={pairs} selected={pair.symbol} onSelect={onSelect} />
-
       <div className={styles.summary}>
-        <div>
-          <p className={styles.pair}>
-            {pair.name} <span className={styles.symbol}>{`${pair.base}/${pair.quote}`}</span>
+        <CoinSelect
+          label="Coin to chart"
+          value={pair.base}
+          options={pairs.map((item) => ({ code: item.base, name: item.name }))}
+          onChange={onSelect}
+        />
+        {price !== undefined && (
+          <p className={styles.quote}>
+            <span className={styles.price}>{formatPrice(price.price)}</span>
+            <span className={styles.unit}>{pair.quote}</span>
+            <PercentChange changePercent={price.changePercent} className={styles.change} />
           </p>
-          {price === undefined && unavailable && <p className={styles.unavailable}>—</p>}
-          {price === undefined && !unavailable && <Skeleton width="11rem" height="1.75rem" />}
-          {price !== undefined && (
-            <p className={styles.quote}>
-              <span className={styles.price}>{formatPrice(price.price)}</span>
-              <span className={styles.unit}>{pair.quote}</span>
-              <PercentChange changePercent={price.changePercent} className={styles.change} />
-            </p>
-          )}
-        </div>
-        {price !== undefined && <p className={styles.open}>Open {formatPrice(price.startPrice)}</p>}
+        )}
       </div>
 
       <div className={styles.plot}>
         {price !== undefined && price.history.length >= 2 ? (
           <PriceChart
             points={price.history}
-            startPrice={price.startPrice}
-            trend={trend}
-            label={`${pair.name} price this session: opened at ${formatPrice(price.startPrice)}, now ${formatPrice(price.price)} ${pair.quote}`}
+            trend={changeTrend(price.changePercent)}
+            label={`${pair.name} price this session`}
           />
         ) : (
           <p className={styles.waiting}>
-            {unavailable
-              ? 'Couldn’t load prices from Binance. The chart starts once prices arrive.'
-              : 'Waiting for live prices to draw the chart…'}
+            {unavailable ? 'No connection to Binance.' : 'Waiting for live prices…'}
           </p>
         )}
       </div>

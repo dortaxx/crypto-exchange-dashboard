@@ -14,13 +14,12 @@ beforeEach(() => {
 })
 
 describe('marketStore', () => {
-  it('stores the first price of each pair and marks loading as done', () => {
+  it('stores the first price of each pair', () => {
     useMarketStore.getState().applyTickers([ticker('BTCUSDT', 100), ticker('ETHUSDT', 10)])
 
-    const { prices, snapshotStatus } = useMarketStore.getState()
+    const { prices } = useMarketStore.getState()
     expect(prices.BTCUSDT).toMatchObject({ price: 100, startPrice: 100 })
     expect(prices.ETHUSDT).toMatchObject({ price: 10, startPrice: 10 })
-    expect(snapshotStatus).toBe('ready')
   })
 
   it('raises one alert when a pair moves 2% from its first price', () => {
@@ -32,14 +31,6 @@ describe('marketStore', () => {
     expect(useMarketStore.getState().alerts).toEqual([
       expect.objectContaining({ symbol: 'BTCUSDT', direction: 'up', changePercent: 2.5 }),
     ])
-  })
-
-  it('stays quiet about pairs the user has hidden', () => {
-    const { applyTickers } = useMarketStore.getState()
-    applyTickers([ticker('BTCUSDT', 100, 1)])
-    applyTickers([ticker('BTCUSDT', 105, 2)], new Set(['BTCUSDT']))
-
-    expect(useMarketStore.getState().alerts).toEqual([])
   })
 
   it('forgets prices of pairs that are no longer tracked', () => {

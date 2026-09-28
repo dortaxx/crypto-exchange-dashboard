@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { DEFAULT_SYMBOLS, PAIR_CATALOG } from '../config/pairs'
-import { targetProblem } from '../domain/targets'
 import type { PriceTarget, SortKey, ThemeChoice, ViewMode } from '../domain/types'
 import { sanitizePreferences, type SavedPreferences } from './sanitizePreferences'
 
@@ -28,8 +27,6 @@ const DEFAULTS: SavedPreferences = {
   targets: [],
   theme: 'system',
 }
-
-export const PREFERENCES_STORAGE_KEY = 'crypto-dashboard:preferences'
 
 const KNOWN_SYMBOLS = new Set(PAIR_CATALOG.map((pair) => pair.symbol))
 
@@ -67,12 +64,9 @@ export const usePreferencesStore = create<PreferencesState>()(
               },
         ),
       addTarget: (target) =>
-        set((state) => {
-          if (targetProblem(state.targets, target.symbol, target.price) !== null) return state
-          return {
-            targets: [{ ...target, id: targetId(), createdAt: Date.now() }, ...state.targets],
-          }
-        }),
+        set((state) => ({
+          targets: [{ ...target, id: targetId(), createdAt: Date.now() }, ...state.targets],
+        })),
       removeTargets: (ids) =>
         set((state) => ({ targets: state.targets.filter((target) => !ids.includes(target.id)) })),
       toggleFavorite: (symbol) => set((state) => ({ favorites: toggle(state.favorites, symbol) })),
@@ -88,7 +82,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         ),
     }),
     {
-      name: PREFERENCES_STORAGE_KEY,
+      name: 'crypto-dashboard:preferences',
       version: 1,
       storage: createJSONStorage(() => localStorage),
       partialize: ({

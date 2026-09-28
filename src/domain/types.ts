@@ -11,8 +11,6 @@ export type Ticker = {
   updatedAt: number
 }
 
-export type LoadStatus = 'loading' | 'ready' | 'error'
-
 export type Direction = 'up' | 'down' | 'flat'
 
 export type MoveAlert = {

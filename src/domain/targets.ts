@@ -1,13 +1,4 @@
-import type { PriceTarget, TargetAlert } from './types'
-
-export type PriceRange = {
-  low: number
-  high: number
-  last: number
-}
-
-const TYPO_DISTANCE = 0.5
-export const MAX_TARGETS = 10
+import type { PriceTarget, TargetAlert, Ticker } from './types'
 
 export function targetDirection(currentPrice: number, targetPrice: number): 'up' | 'down' | null {
   if (targetPrice > currentPrice) return 'up'
@@ -15,27 +6,23 @@ export function targetDirection(currentPrice: number, targetPrice: number): 'up'
   return null
 }
 
+export function targetVerb(direction: 'up' | 'down'): string {
+  return direction === 'up' ? 'rises above' : 'falls below'
+}
+
 export function isTargetReached(target: PriceTarget, price: number): boolean {
   return target.direction === 'up' ? price >= target.price : price <= target.price
 }
 
-export function widenRange(range: PriceRange | undefined, price: number): PriceRange {
-  if (range === undefined) return { low: price, high: price, last: price }
-  return { low: Math.min(range.low, price), high: Math.max(range.high, price), last: price }
-}
-
 export function reachedTargets(
   targets: readonly PriceTarget[],
-  ranges: ReadonlyMap<string, PriceRange>,
-  rangeStart: number,
+  tickers: readonly Ticker[],
   now: number,
 ): TargetAlert[] {
+  const latest = new Map(tickers.map((ticker) => [ticker.symbol, ticker.price]))
   return targets.flatMap((target): TargetAlert[] => {
-    const range = ranges.get(target.symbol)
-    if (range === undefined) return []
-    const extreme = target.direction === 'up' ? range.high : range.low
-    const price = target.createdAt > rangeStart ? range.last : extreme
-    if (!isTargetReached(target, price)) return []
+    const price = latest.get(target.symbol)
+    if (price === undefined || !isTargetReached(target, price)) return []
     return [
       {
         kind: 'target',
@@ -48,28 +35,4 @@ export function reachedTargets(
       },
     ]
   })
-}
-
-export function likelyIntended(targetPrice: number, currentPrice: number): number | null {
-  if (Math.abs(targetPrice - currentPrice) / currentPrice <= TYPO_DISTANCE) return null
-  const shift = Math.round(Math.log10(currentPrice / targetPrice))
-  if (shift === 0) return null
-  const suggestion = Number((targetPrice * 10 ** shift).toPrecision(12))
-  return Math.abs(suggestion - currentPrice) / currentPrice <= TYPO_DISTANCE ? suggestion : null
-}
-
-export function targetProblem(
-  targets: readonly PriceTarget[],
-  symbol: string,
-  price: number,
-): 'full' | 'duplicate' | null {
-  if (targets.length >= MAX_TARGETS) return 'full'
-  if (targets.some((target) => target.symbol === symbol && target.price === price)) {
-    return 'duplicate'
-  }
-  return null
-}
-
-export function targetVerb(direction: 'up' | 'down'): string {
-  return direction === 'up' ? 'rises above' : 'falls below'
 }

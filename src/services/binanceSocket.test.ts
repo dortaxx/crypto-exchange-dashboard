@@ -46,10 +46,6 @@ class FakeSocket {
       (text) => JSON.parse(text) as { method: string; params?: string[]; id: number },
     )
   }
-
-  simulateReply(id: number) {
-    this.simulateMessage(JSON.stringify({ result: null, id }))
-  }
 }
 
 function fakeNetwork(initiallyOnline = true) {
@@ -84,7 +80,6 @@ function setup(options: { maxAttempts?: number; online?: boolean } = {}) {
     createSocket: (url) => new FakeSocket(url) as unknown as WebSocket,
     network: net.network,
     random: () => 1,
-    staleAfterMs: 10_000,
     maxAttempts: options.maxAttempts ?? 10,
   })
   const tickers: Ticker[] = []
@@ -163,44 +158,6 @@ describe('connecting and subscribing', () => {
     expect(latestSocket().requests().slice(1)).toEqual([
       expect.objectContaining({ method: 'UNSUBSCRIBE', params: ['ethusdt@miniTicker'] }),
       expect.objectContaining({ method: 'SUBSCRIBE', params: ['solusdt@miniTicker'] }),
-    ])
-  })
-})
-
-describe('pacing subscription changes', () => {
-  it('sends the first change straight away when nothing was sent recently', () => {
-    const { phone, latestSocket } = setup()
-    phone.connect()
-    latestSocket().simulateOpen()
-
-    phone.setSymbols(['BTCUSDT'])
-
-    expect(latestSocket().requests()).toEqual([
-      expect.objectContaining({ method: 'SUBSCRIBE', params: ['btcusdt@miniTicker'] }),
-    ])
-  })
-
-  it('folds a burst of changes into at most one unsubscribe and one subscribe', () => {
-    const { phone, latestSocket } = setup()
-    phone.setSymbols(['BTCUSDT'])
-    phone.connect()
-    latestSocket().simulateOpen()
-
-    const extra = ['ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT']
-    extra.forEach((_, index) => {
-      phone.setSymbols(['BTCUSDT', ...extra.slice(0, index + 1)])
-    })
-    phone.setSymbols(['ETHUSDT', 'SOLUSDT', 'BNBUSDT'])
-    expect(latestSocket().requests()).toHaveLength(1)
-
-    vi.advanceTimersByTime(500)
-
-    expect(latestSocket().requests().slice(1)).toEqual([
-      expect.objectContaining({ method: 'UNSUBSCRIBE', params: ['btcusdt@miniTicker'] }),
-      expect.objectContaining({
-        method: 'SUBSCRIBE',
-        params: ['ethusdt@miniTicker', 'solusdt@miniTicker', 'bnbusdt@miniTicker'],
-      }),
     ])
   })
 })
@@ -327,40 +284,7 @@ describe('closing on purpose', () => {
   })
 })
 
-describe('watchdog', () => {
-  it('asks Binance whether a quiet connection is alive before dropping it', () => {
-    const { phone, latestSocket } = setup()
-    phone.setSymbols(['BTCUSDT'])
-    phone.connect()
-    const silent = latestSocket()
-    silent.simulateOpen()
-
-    vi.advanceTimersByTime(10_000)
-    expect(silent.requests().at(-1)).toMatchObject({ method: 'LIST_SUBSCRIPTIONS' })
-    expect(silent.closedWith).toBeNull()
-
-    vi.advanceTimersByTime(5_000)
-    expect(silent.closedWith).toEqual({ code: 4000, reason: 'No data received' })
-    expect(phone.getState()).toMatchObject({ status: 'reconnecting', attempt: 1 })
-  })
-
-  it('keeps a quiet connection that still answers, for pairs that rarely trade', () => {
-    const { phone, latestSocket } = setup()
-    phone.setSymbols(['ETCUSDT'])
-    phone.connect()
-    latestSocket().simulateOpen()
-
-    for (let round = 0; round < 4; round += 1) {
-      vi.advanceTimersByTime(10_000)
-      const probe = latestSocket().requests().at(-1)
-      expect(probe).toMatchObject({ method: 'LIST_SUBSCRIPTIONS' })
-      latestSocket().simulateReply(probe?.id ?? -1)
-    }
-
-    expect(phone.getState()).toEqual({ status: 'connected' })
-    expect(FakeSocket.instances).toHaveLength(1)
-  })
-
+describe('quiet periods', () => {
   it('stays connected while prices keep arriving', () => {
     const { phone, latestSocket } = setup()
     phone.setSymbols(['BTCUSDT'])
@@ -387,31 +311,6 @@ describe('watchdog', () => {
   })
 })
 
-describe('slow handshakes', () => {
-  it('gives up on a socket that never finishes connecting and retries', () => {
-    const { phone, latestSocket } = setup()
-    phone.connect()
-    const stuck = latestSocket()
-
-    vi.advanceTimersByTime(10_000)
-
-    expect(stuck.closedWith).toEqual({ code: 4000, reason: 'Connection timed out' })
-    expect(phone.getState()).toMatchObject({ status: 'reconnecting', attempt: 1 })
-  })
-
-  it('does not time out a socket that connected in time', () => {
-    const { phone, latestSocket } = setup()
-    phone.connect()
-    vi.advanceTimersByTime(3_000)
-    latestSocket().simulateOpen()
-
-    vi.advanceTimersByTime(60_000)
-
-    expect(phone.getState()).toEqual({ status: 'connected' })
-    expect(FakeSocket.instances).toHaveLength(1)
-  })
-})
-
 describe('offline', () => {
   it('stops and waits while the browser is offline, then reconnects when it comes back', () => {
     const { phone, net, latestSocket } = setup()
@@ -425,7 +324,7 @@ describe('offline', () => {
 
     net.goOnline()
     expect(FakeSocket.instances).toHaveLength(2)
-    expect(phone.getState()).toEqual({ status: 'reconnecting', attempt: 1, retryInMs: 0 })
+    expect(phone.getState()).toEqual({ status: 'connecting' })
   })
 
   it('waits for the network when connect() is called offline', () => {

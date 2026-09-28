@@ -72,18 +72,14 @@
   justify-content: space-between;
 }
 
-.note {
+.note,
+.error {
   flex: 1 1 12rem;
   font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
-.note[data-tone='warning'] {
-  color: var(--warn);
-  font-weight: 600;
-}
-
-.note[data-tone='error'] {
+.error {
   color: var(--down);
 }
 

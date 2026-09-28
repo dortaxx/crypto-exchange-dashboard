@@ -1,11 +1,8 @@
-import { useId, useRef } from 'react'
+import { useId } from 'react'
 import { targetVerb } from '../../domain/targets'
-import { AssetPicker, type AssetOption } from '../AssetPicker/AssetPicker'
-import { focusAfterRemoval } from '../focusAfterRemoval'
+import { CoinSelect, type CoinOption } from '../CoinSelect/CoinSelect'
 import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './PriceTargets.module.css'
-
-export type NoteTone = 'info' | 'warning' | 'error'
 
 export type TargetView = {
   id: string
@@ -15,11 +12,11 @@ export type TargetView = {
 }
 
 type PriceTargetsProps = {
-  assets: readonly AssetOption[]
+  assets: readonly CoinOption[]
   asset: string
   value: string
   note: string
-  tone: NoteTone
+  invalid: boolean
   canAdd: boolean
   targets: readonly TargetView[]
   onAssetChange: (code: string) => void
@@ -33,7 +30,7 @@ export function PriceTargets({
   asset,
   value,
   note,
-  tone,
+  invalid,
   canAdd,
   targets,
   onAssetChange,
@@ -43,8 +40,6 @@ export function PriceTargets({
 }: PriceTargetsProps) {
   const inputId = useId()
   const noteId = useId()
-  const inputRef = useRef<HTMLInputElement>(null)
-  const listRef = useRef<HTMLUListElement>(null)
 
   return (
     <div className={styles.targets}>
@@ -60,30 +55,25 @@ export function PriceTargets({
           <label className={styles.field} htmlFor={inputId}>
             <span className={styles.caption}>Alert me at (USDT)</span>
             <input
-              ref={inputRef}
               id={inputId}
               className={styles.input}
               type="text"
               inputMode="decimal"
               autoComplete="off"
-              spellCheck={false}
               placeholder="0.00"
               value={value}
-              aria-invalid={tone === 'error'}
+              aria-invalid={invalid}
               aria-describedby={noteId}
               onChange={(event) => {
                 onValueChange(event.target.value)
               }}
             />
           </label>
-          <AssetPicker label="Target coin" value={asset} assets={assets} onChange={onAssetChange} />
+          <CoinSelect label="Target coin" value={asset} options={assets} onChange={onAssetChange} />
         </div>
         <div className={styles.footer}>
-          <p id={noteId} className={styles.note} data-tone={tone}>
+          <p id={noteId} className={invalid ? styles.error : styles.note}>
             {note}
-          </p>
-          <p className="visually-hidden" role="status">
-            {tone === 'info' ? '' : note}
           </p>
           <button type="submit" className={styles.add} disabled={!canAdd}>
             Add target
@@ -92,8 +82,8 @@ export function PriceTargets({
       </form>
 
       {targets.length > 0 && (
-        <ul ref={listRef} className={styles.list} aria-label="Waiting price targets">
-          {targets.map((target, index) => (
+        <ul className={styles.list} aria-label="Price targets">
+          {targets.map((target) => (
             <li key={target.id} className={styles.item} data-direction={target.direction}>
               <TrendIcon direction={target.direction} />
               <span className={styles.text}>
@@ -104,15 +94,8 @@ export function PriceTargets({
                 type="button"
                 className={styles.remove}
                 aria-label={`Remove target: ${target.asset} ${targetVerb(target.direction)} ${target.price}`}
-                data-action="remove-target"
                 onClick={() => {
                   onRemove(target.id)
-                  focusAfterRemoval(
-                    listRef.current,
-                    '[data-action="remove-target"]',
-                    index,
-                    inputRef.current,
-                  )
                 }}
               >
                 ×

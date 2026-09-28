@@ -25,10 +25,6 @@ export function buildRequest(
   return JSON.stringify({ method, params: symbols.map(toStreamName), id })
 }
 
-export function buildListRequest(id: number): string {
-  return JSON.stringify({ method: 'LIST_SUBSCRIPTIONS', id })
-}
-
 export function parseSocketMessage(data: unknown): SocketMessage {
   if (typeof data !== 'string') return IGNORED
 

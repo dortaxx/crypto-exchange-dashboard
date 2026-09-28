@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildListRequest, buildRequest, parseSocketMessage, toStreamName } from './binanceProtocol'
+import { buildRequest, parseSocketMessage, toStreamName } from './binanceProtocol'
 
 const REAL_MINI_TICKER =
   '{"e":"24hrMiniTicker","E":1790435739015,"s":"BTCUSDT","c":"84028.01000000","o":"84004.82000000","h":"84336.96000000","l":"83363.63000000","v":"8974.97894000","q":"753516400.00"}'
@@ -58,14 +58,6 @@ describe('buildRequest', () => {
       method: 'SUBSCRIBE',
       params: ['btcusdt@miniTicker', 'ethusdt@miniTicker'],
       id: 7,
-    })
-  })
-
-  it('builds a LIST_SUBSCRIPTIONS request, whose reply counts as an ack', () => {
-    expect(JSON.parse(buildListRequest(8))).toEqual({ method: 'LIST_SUBSCRIPTIONS', id: 8 })
-    expect(parseSocketMessage('{"result":["btcusdt@miniTicker"],"id":8}')).toEqual({
-      kind: 'ack',
-      id: 8,
     })
   })
 })

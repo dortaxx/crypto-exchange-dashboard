@@ -96,60 +96,9 @@
   stroke-linejoin: round;
 }
 
-.note,
-.error {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  font-family: var(--font-figures);
-  font-size: var(--text-sm);
-}
-
-.note {
-  color: var(--text-muted);
-}
-
 .error {
   color: var(--down);
-}
-
-.info {
-  flex-shrink: 0;
-  width: 1rem;
-  height: 1rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.4;
-  stroke-linecap: round;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.chip {
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-  background: var(--surface-raised);
-  color: var(--text);
-  font-family: var(--font-figures);
   font-size: var(--text-sm);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.chip:hover {
-  border-color: var(--accent-soft);
-}
-
-.chip[aria-pressed='true'] {
-  background: var(--accent);
-  color: var(--accent-contrast);
 }
 
 @media (max-width: 29.99rem) {

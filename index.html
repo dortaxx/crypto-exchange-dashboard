@@ -11,13 +11,6 @@
       content="Live cryptocurrency prices from Binance, updating in real time."
     />
     <title>Crypto Dashboard · Live prices</title>
-    <script>
-      try {
-        const saved = JSON.parse(localStorage.getItem('crypto-dashboard:preferences'))
-        const theme = saved && saved.state && saved.state.theme
-        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
-      } catch {}
-    </script>
   </head>
   <body>
     <div id="root"></div>

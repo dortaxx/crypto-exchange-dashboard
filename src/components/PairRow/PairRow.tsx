@@ -38,7 +38,6 @@ export function PairRow({
           <button
             type="button"
             className={styles.star}
-            data-action="favorite"
             aria-pressed={isFavorite}
             aria-label={`Favorite ${pair.name}`}
             onClick={() => {
@@ -76,7 +75,6 @@ export function PairRow({
         <button
           type="button"
           className={styles.hide}
-          data-action="hide"
           aria-label={`Hide ${pair.name}`}
           title="Hide"
           onClick={() => {

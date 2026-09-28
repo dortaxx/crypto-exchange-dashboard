@@ -43,21 +43,10 @@ export function formatTime(timestamp: number): string {
   return clockTime.format(timestamp)
 }
 
-const hourMinute = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' })
-
-export function formatShortTime(timestamp: number): string {
-  return hourMinute.format(timestamp)
-}
-
 export function formatPercent(percent: number): string {
   return signedPercent.format(roundPercent(percent) / 100)
 }
 
 export function formatPrice(price: number): string {
   return withDecimals(priceDecimals(price)).format(price)
-}
-
-export function formatAxisPrice(price: number, step: number): string {
-  const stepDecimals = Math.max(0, Math.ceil(-Math.log10(step) - 1e-9))
-  return withDecimals(Math.min(8, Math.max(priceDecimals(price), stepDecimals))).format(price)
 }

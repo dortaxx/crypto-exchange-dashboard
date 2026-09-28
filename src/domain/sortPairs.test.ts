@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { keepOrder, sortPairs } from './sortPairs'
+import { sortPairs } from './sortPairs'
 import type { Pair, PairPrice } from './types'
 
 const pair = (base: string, name: string): Pair => ({
@@ -51,15 +51,5 @@ describe('sortPairs', () => {
     const tied = { BTCUSDT: quote(1, 0), ETHUSDT: quote(1, 0), SOLUSDT: quote(1, 0) }
     expect(bases(sortPairs(pairs, tied, 'change', 'desc'))).toEqual(['BTC', 'ETH', 'SOL'])
     expect(bases(pairs)).toEqual(['SOL', 'BTC', 'ETH'])
-  })
-})
-
-describe('keepOrder', () => {
-  it('keeps a remembered order, dropping pairs that left and adding new ones at the end', () => {
-    const btc = pair('BTC', 'Bitcoin')
-    const eth = pair('ETH', 'Ethereum')
-    const sol = pair('SOL', 'Solana')
-    expect(bases(keepOrder([btc, eth, sol], ['SOLUSDT', 'BTCUSDT']))).toEqual(['SOL', 'BTC', 'ETH'])
-    expect(bases(keepOrder([eth, btc], ['SOLUSDT', 'BTCUSDT', 'ETHUSDT']))).toEqual(['BTC', 'ETH'])
   })
 })

@@ -1,18 +1,9 @@
-import { useMemo, useState } from 'react'
-import {
-  PriceTargets,
-  type NoteTone,
-  type TargetView,
-} from '../components/PriceTargets/PriceTargets'
+import { useState } from 'react'
+import type { CoinOption } from '../components/CoinSelect/CoinSelect'
+import { PriceTargets, type TargetView } from '../components/PriceTargets/PriceTargets'
 import { parseAmount } from '../domain/amount'
 import { formatPrice } from '../domain/format'
-import {
-  MAX_TARGETS,
-  likelyIntended,
-  targetDirection,
-  targetProblem,
-  targetVerb,
-} from '../domain/targets'
+import { targetDirection, targetVerb } from '../domain/targets'
 import type { Pair, PriceTarget } from '../domain/types'
 import { useMarketStore } from '../store/marketStore'
 import { usePreferencesStore } from '../store/preferencesStore'
@@ -23,52 +14,27 @@ type PriceTargetsContainerProps = {
 
 type Check = {
   note: string
-  tone: NoteTone
+  invalid: boolean
   target: Pick<PriceTarget, 'price' | 'direction'> | null
 }
 
-const problem = (note: string): Check => ({ note, tone: 'error', target: null })
+const problem = (note: string): Check => ({ note, invalid: true, target: null })
 
-function checkTarget(
-  input: string,
-  pair: Pair,
-  current: number | undefined,
-  targets: readonly PriceTarget[],
-): Check {
+function checkTarget(input: string, pair: Pair, current: number | undefined): Check {
   const parsed = parseAmount(input)
-  const waiting: Check = {
-    note:
-      current === undefined
-        ? `Waiting for ${pair.base}’s live price…`
-        : `${pair.base} is at ${formatPrice(current)} now.`,
-    tone: 'info',
-    target: null,
-  }
-
-  if (!parsed.ok && parsed.reason === 'empty') return waiting
+  if (!parsed.ok && parsed.reason === 'empty') return { note: '', invalid: false, target: null }
   if (!parsed.ok && parsed.reason === 'negative') return problem('Prices can’t be negative.')
   if (!parsed.ok) return problem('Enter a price, like 85000.')
   if (parsed.value === 0) return problem('Enter a price above zero.')
-  if (current === undefined) return waiting
-  const blocked = targetProblem(targets, pair.symbol, parsed.value)
-  if (blocked === 'full') return problem(`You can keep ${MAX_TARGETS} targets. Remove one first.`)
-  if (blocked === 'duplicate') return problem('You already have this target.')
+  if (current === undefined)
+    return { note: 'Waiting for the live price…', invalid: false, target: null }
 
   const direction = targetDirection(current, parsed.value)
   if (direction === null) return problem(`${pair.base} is already at that price.`)
-  const target = { price: parsed.value, direction }
-  const intended = likelyIntended(parsed.value, current)
-  if (intended !== null) {
-    return {
-      note: `${formatPrice(parsed.value)} is far from ${pair.base}’s current price. Did you mean ${formatPrice(intended)}?`,
-      tone: 'warning',
-      target,
-    }
-  }
   return {
-    note: `Alerts when ${pair.base} ${targetVerb(direction)} ${formatPrice(parsed.value)} · now ${formatPrice(current)}`,
-    tone: 'info',
-    target,
+    note: `Alerts when ${pair.base} ${targetVerb(direction)} ${formatPrice(parsed.value)}`,
+    invalid: false,
+    target: { price: parsed.value, direction },
   }
 }
 
@@ -80,11 +46,11 @@ export function PriceTargetsContainer({ pairs }: PriceTargetsContainerProps) {
   const [value, setValue] = useState('')
   const pair = pairs.find((candidate) => candidate.base === assetChoice) ?? pairs[0]
   const current = useMarketStore((state) => (pair ? state.prices[pair.symbol]?.price : undefined))
-  const assets = useMemo(() => pairs.map((item) => ({ code: item.base, name: item.name })), [pairs])
 
   if (pair === undefined) return null
 
-  const check = checkTarget(value, pair, current, targets)
+  const assets: CoinOption[] = pairs.map((item) => ({ code: item.base, name: item.name }))
+  const check = checkTarget(value, pair, current)
   const views: TargetView[] = targets.map((target) => ({
     id: target.id,
     asset: pairs.find((item) => item.symbol === target.symbol)?.base ?? target.symbol,
@@ -98,7 +64,7 @@ export function PriceTargetsContainer({ pairs }: PriceTargetsContainerProps) {
       asset={pair.base}
       value={value}
       note={check.note}
-      tone={check.tone}
+      invalid={check.invalid}
       canAdd={check.target !== null}
       targets={views}
       onAssetChange={setAssetChoice}

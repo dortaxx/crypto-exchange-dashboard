@@ -13,9 +13,9 @@ export function SessionChartContainer({ pairs }: SessionChartContainerProps) {
   const hidden = usePreferencesStore((state) => state.hidden)
   const [chosen, setChosen] = useState<string | null>(null)
   const shown = pairs.filter((pair) => !hidden.includes(pair.symbol))
-  const pair = shown.find((candidate) => candidate.symbol === chosen) ?? shown[0]
+  const pair = shown.find((candidate) => candidate.base === chosen) ?? shown[0]
   const price = useMarketStore((state) => (pair ? state.prices[pair.symbol] : undefined))
-  const unavailable = useMarketStore((state) => state.snapshotStatus === 'error')
+  const unavailable = useMarketStore((state) => state.connection.status === 'error')
 
   if (pair === undefined) {
     return (

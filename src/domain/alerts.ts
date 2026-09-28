@@ -1,7 +1,7 @@
 export type AlertZone = 'calm' | 'up' | 'down'
 
 export const ALERT_AT_PERCENT = 2
-export const CALM_BELOW_PERCENT = 1.5
+const CALM_BELOW_PERCENT = 1.5
 
 export function nextAlertZone(zone: AlertZone, changePercent: number): AlertZone {
   if (changePercent >= ALERT_AT_PERCENT) {
