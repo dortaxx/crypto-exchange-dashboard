@@ -38,7 +38,7 @@ No API keys are needed, because Binance market data is public.
 - **ESLint 10**, **typescript-eslint** and **Prettier**: linting and formatting
 - **cryptocurrency-icons** and **@fontsource**: coin logos and self-hosted fonts
 
-The price chart is plain SVG, with no chart library.
+The price chart is hand-made (an SVG line with HTML labels), with no chart library.
 
 ## Architecture
 
@@ -61,9 +61,9 @@ ESLint enforces the layers: components cannot import stores, services, hooks or 
 
 ## Technical decisions and assumptions
 
-- **"Price change"** means the % change since the page was opened (the first price received for each pair). The column, the sorting and the alerts all use this number.
-- **±2% alerts** fire once when a pair crosses the threshold, and fire again only after the pair has come back inside ±1.5%. This prevents duplicate alerts.
-- **Reconnecting** uses exponential backoff with jitter (up to 30 s between tries). After 10 failed attempts it stops and shows a Retry button. A watchdog checks whether a silent connection is still alive before replacing it.
+- **"Price change"** means the % change since the first price received for each pair (when the page loaded, or when the pair was added). The column, the sorting and the alerts all use this number.
+- **±2% alerts** fire once when a pair crosses the threshold. They fire again in the same direction only after the pair has come back inside ±1.5%, which prevents duplicate alerts.
+- **Reconnecting** uses exponential backoff with jitter (up to 30 s between tries). After 10 failed reconnect attempts in a row it stops and shows a Retry button. A watchdog checks whether a silent connection is still alive before replacing it.
 - **Changing pairs** sends `SUBSCRIBE` / `UNSUBSCRIBE` on the open connection; it never reconnects.
 - **Updates are batched**: prices are applied every 250 ms (the latest price wins), which limits re-renders.
 - **Two stores**: live prices stay in memory; favorites, hidden pairs and other preferences are saved to `localStorage` and validated when loaded.
