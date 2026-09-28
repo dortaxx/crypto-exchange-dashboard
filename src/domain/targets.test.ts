@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { isTargetReached, reachedTargets, targetDirection } from './targets'
-import type { PriceTarget, Ticker } from './types'
+import {
+  isTargetReached,
+  likelyIntended,
+  reachedTargets,
+  targetDirection,
+  widenRange,
+  type PriceRange,
+} from './targets'
+import type { PriceTarget } from './types'
 
 const target = (price: number, direction: 'up' | 'down', symbol = 'BTCUSDT'): PriceTarget => ({
   id: `${symbol}-${direction}-${price}`,
@@ -9,7 +16,7 @@ const target = (price: number, direction: 'up' | 'down', symbol = 'BTCUSDT'): Pr
   direction,
   createdAt: 0,
 })
-const ticker = (symbol: string, price: number): Ticker => ({ symbol, price, updatedAt: 1 })
+const ranges = (entries: Record<string, PriceRange>) => new Map(Object.entries(entries))
 
 describe('targetDirection', () => {
   it('waits for a rise when the target is above the current price, and a fall when below', () => {
@@ -35,10 +42,21 @@ describe('isTargetReached', () => {
   })
 })
 
+describe('widenRange', () => {
+  it('tracks the lowest and highest price seen', () => {
+    const range = [100, 97, 103, 101].reduce<PriceRange | undefined>(widenRange, undefined)
+    expect(range).toEqual({ low: 97, high: 103 })
+  })
+})
+
 describe('reachedTargets', () => {
   it('turns every reached target into an alert that keeps the target id', () => {
     const targets = [target(110, 'up'), target(90, 'down'), target(3000, 'up', 'ETHUSDT')]
-    const alerts = reachedTargets(targets, [ticker('BTCUSDT', 111), ticker('ETHUSDT', 2900)], 5)
+    const alerts = reachedTargets(
+      targets,
+      ranges({ BTCUSDT: { low: 100, high: 111 }, ETHUSDT: { low: 2900, high: 2950 } }),
+      5,
+    )
 
     expect(alerts).toEqual([
       {
@@ -53,7 +71,32 @@ describe('reachedTargets', () => {
     ])
   })
 
+  it('catches a dip that touched the target even if the price is back above it', () => {
+    const alerts = reachedTargets(
+      [target(82_970, 'down')],
+      ranges({ BTCUSDT: { low: 82_960, high: 83_010 } }),
+      5,
+    )
+    expect(alerts).toEqual([expect.objectContaining({ direction: 'down', price: 82_960 })])
+  })
+
   it('ignores targets whose pair has no new price in this batch', () => {
-    expect(reachedTargets([target(110, 'up')], [ticker('ETHUSDT', 5000)], 5)).toEqual([])
+    expect(
+      reachedTargets([target(110, 'up')], ranges({ ETHUSDT: { low: 1, high: 9 } }), 5),
+    ).toEqual([])
+  })
+})
+
+describe('likelyIntended', () => {
+  it('suggests the price with the right number of digits when a zero is missing or extra', () => {
+    expect(likelyIntended(8_300, 82_984)).toBe(83_000)
+    expect(likelyIntended(830_000, 82_984)).toBe(83_000)
+    expect(likelyIntended(0.25, 2.4)).toBe(2.5)
+  })
+
+  it('stays quiet for targets that are plausible, even far ones', () => {
+    expect(likelyIntended(83_990, 82_984)).toBeNull()
+    expect(likelyIntended(150_000, 82_984)).toBeNull()
+    expect(likelyIntended(30_000, 82_984)).toBeNull()
   })
 })

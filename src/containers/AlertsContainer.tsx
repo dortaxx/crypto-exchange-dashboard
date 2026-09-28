@@ -3,6 +3,7 @@ import { PAIR_CATALOG } from '../config/pairs'
 import { formatPrice, formatTime } from '../domain/format'
 import type { PriceAlert } from '../domain/types'
 import { useMarketStore } from '../store/marketStore'
+import { usePreferencesStore } from '../store/preferencesStore'
 
 function toView(alert: PriceAlert): AlertView {
   const pair = PAIR_CATALOG.find((candidate) => candidate.symbol === alert.symbol)
@@ -23,7 +24,7 @@ function toView(alert: PriceAlert): AlertView {
       return {
         ...common,
         message: `${label} ${verb} your target of ${formatPrice(alert.targetPrice)} USDT`,
-        prices: `Target ${formatPrice(alert.targetPrice)} → now ${formatPrice(alert.price)} USDT`,
+        prices: `Target ${formatPrice(alert.targetPrice)} → reached ${formatPrice(alert.price)} USDT`,
       }
     }
   }
@@ -32,6 +33,13 @@ function toView(alert: PriceAlert): AlertView {
 export function AlertsContainer() {
   const alerts = useMarketStore((state) => state.alerts)
   const dismissAlert = useMarketStore((state) => state.dismissAlert)
+  const waitingTargets = usePreferencesStore((state) => state.targets.length)
 
-  return <AlertList alerts={alerts.map(toView)} onDismiss={dismissAlert} />
+  return (
+    <AlertList
+      alerts={alerts.map(toView)}
+      waitingTargets={waitingTargets}
+      onDismiss={dismissAlert}
+    />
+  )
 }

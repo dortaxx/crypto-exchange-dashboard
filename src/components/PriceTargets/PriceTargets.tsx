@@ -4,6 +4,8 @@ import { focusAfterRemoval } from '../focusAfterRemoval'
 import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './PriceTargets.module.css'
 
+export type NoteTone = 'info' | 'warning' | 'error'
+
 export type TargetView = {
   id: string
   asset: string
@@ -16,7 +18,7 @@ type PriceTargetsProps = {
   asset: string
   value: string
   note: string
-  invalid: boolean
+  tone: NoteTone
   canAdd: boolean
   targets: readonly TargetView[]
   onAssetChange: (code: string) => void
@@ -30,7 +32,7 @@ export function PriceTargets({
   asset,
   value,
   note,
-  invalid,
+  tone,
   canAdd,
   targets,
   onAssetChange,
@@ -67,7 +69,7 @@ export function PriceTargets({
               spellCheck={false}
               placeholder="0.00"
               value={value}
-              aria-invalid={invalid}
+              aria-invalid={tone === 'error'}
               aria-describedby={noteId}
               onChange={(event) => {
                 onValueChange(event.target.value)
@@ -77,11 +79,11 @@ export function PriceTargets({
           <AssetPicker label="Target coin" value={asset} assets={assets} onChange={onAssetChange} />
         </div>
         <div className={styles.footer}>
-          <p id={noteId} className={invalid ? styles.error : styles.note}>
+          <p id={noteId} className={styles.note} data-tone={tone}>
             {note}
           </p>
           <p className="visually-hidden" role="status">
-            {invalid ? note : ''}
+            {tone === 'info' ? '' : note}
           </p>
           <button type="submit" className={styles.add} disabled={!canAdd}>
             Add target
@@ -90,7 +92,7 @@ export function PriceTargets({
       </form>
 
       {targets.length > 0 && (
-        <ul ref={listRef} className={styles.list} aria-label="Active price targets">
+        <ul ref={listRef} className={styles.list} aria-label="Waiting price targets">
           {targets.map((target, index) => (
             <li key={target.id} className={styles.item} data-direction={target.direction}>
               <TrendIcon direction={target.direction} />

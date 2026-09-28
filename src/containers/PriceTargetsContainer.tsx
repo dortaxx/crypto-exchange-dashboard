@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react'
-import { PriceTargets, type TargetView } from '../components/PriceTargets/PriceTargets'
+import {
+  PriceTargets,
+  type NoteTone,
+  type TargetView,
+} from '../components/PriceTargets/PriceTargets'
 import { parseAmount } from '../domain/amount'
 import { formatPrice } from '../domain/format'
-import { targetDirection } from '../domain/targets'
+import { likelyIntended, targetDirection } from '../domain/targets'
 import type { Pair, PriceTarget } from '../domain/types'
 import { useMarketStore } from '../store/marketStore'
 import { MAX_TARGETS, usePreferencesStore } from '../store/preferencesStore'
@@ -13,11 +17,11 @@ type PriceTargetsContainerProps = {
 
 type Check = {
   note: string
-  invalid: boolean
+  tone: NoteTone
   target: Pick<PriceTarget, 'price' | 'direction'> | null
 }
 
-const problem = (note: string): Check => ({ note, invalid: true, target: null })
+const problem = (note: string): Check => ({ note, tone: 'error', target: null })
 
 function checkTarget(
   input: string,
@@ -31,7 +35,7 @@ function checkTarget(
       current === undefined
         ? `Waiting for ${pair.base}’s live price…`
         : `${pair.base} is at ${formatPrice(current)} now.`,
-    invalid: false,
+    tone: 'info',
     target: null,
   }
 
@@ -50,10 +54,19 @@ function checkTarget(
   const direction = targetDirection(current, parsed.value)
   if (direction === null) return problem(`${pair.base} is already at that price.`)
   const verb = direction === 'up' ? 'rises above' : 'falls below'
+  const target = { price: parsed.value, direction }
+  const intended = likelyIntended(parsed.value, current)
+  if (intended !== null) {
+    return {
+      note: `${formatPrice(parsed.value)} is far from ${pair.base}’s price of ${formatPrice(current)}. Did you mean ${formatPrice(intended)}?`,
+      tone: 'warning',
+      target,
+    }
+  }
   return {
     note: `Alerts when ${pair.base} ${verb} ${formatPrice(parsed.value)} · now ${formatPrice(current)}`,
-    invalid: false,
-    target: { price: parsed.value, direction },
+    tone: 'info',
+    target,
   }
 }
 
@@ -83,7 +96,7 @@ export function PriceTargetsContainer({ pairs }: PriceTargetsContainerProps) {
       asset={pair.base}
       value={value}
       note={check.note}
-      invalid={check.invalid}
+      tone={check.tone}
       canAdd={check.target !== null}
       targets={views}
       onAssetChange={setAssetChoice}

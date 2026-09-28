@@ -1,4 +1,11 @@
-import type { PriceTarget, TargetAlert, Ticker } from './types'
+import type { PriceTarget, TargetAlert } from './types'
+
+export type PriceRange = {
+  low: number
+  high: number
+}
+
+const TYPO_DISTANCE = 0.5
 
 export function targetDirection(currentPrice: number, targetPrice: number): 'up' | 'down' | null {
   if (targetPrice > currentPrice) return 'up'
@@ -10,15 +17,21 @@ export function isTargetReached(target: PriceTarget, price: number): boolean {
   return target.direction === 'up' ? price >= target.price : price <= target.price
 }
 
+export function widenRange(range: PriceRange | undefined, price: number): PriceRange {
+  if (range === undefined) return { low: price, high: price }
+  return { low: Math.min(range.low, price), high: Math.max(range.high, price) }
+}
+
 export function reachedTargets(
   targets: readonly PriceTarget[],
-  tickers: readonly Ticker[],
+  ranges: ReadonlyMap<string, PriceRange>,
   now: number,
 ): TargetAlert[] {
-  const latest = new Map(tickers.map((ticker) => [ticker.symbol, ticker.price]))
   return targets.flatMap((target): TargetAlert[] => {
-    const price = latest.get(target.symbol)
-    if (price === undefined || !isTargetReached(target, price)) return []
+    const range = ranges.get(target.symbol)
+    if (range === undefined) return []
+    const price = target.direction === 'up' ? range.high : range.low
+    if (!isTargetReached(target, price)) return []
     return [
       {
         kind: 'target',
@@ -31,4 +44,12 @@ export function reachedTargets(
       },
     ]
   })
+}
+
+export function likelyIntended(targetPrice: number, currentPrice: number): number | null {
+  if (Math.abs(targetPrice - currentPrice) / currentPrice <= TYPO_DISTANCE) return null
+  const shift = Math.round(Math.log10(currentPrice / targetPrice))
+  if (shift === 0) return null
+  const suggestion = Number((targetPrice * 10 ** shift).toPrecision(12))
+  return Math.abs(suggestion - currentPrice) / currentPrice <= TYPO_DISTANCE ? suggestion : null
 }

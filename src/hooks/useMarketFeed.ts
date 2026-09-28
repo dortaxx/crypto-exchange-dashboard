@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { reachedTargets } from '../domain/targets'
+import { reachedTargets, widenRange, type PriceRange } from '../domain/targets'
 import type { Pair, Ticker } from '../domain/types'
 import { BinanceSocket } from '../services/binanceSocket'
 import { useMarketStore } from '../store/marketStore'
@@ -16,21 +16,25 @@ export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
     const socket = new BinanceSocket()
     socketRef.current = socket
     const pending = new Map<string, Ticker>()
+    const ranges = new Map<string, PriceRange>()
 
     const stopListeningToState = socket.onStateChange(setConnection)
     const stopListeningToTickers = socket.onTicker((ticker) => {
       pending.set(ticker.symbol, ticker)
+      ranges.set(ticker.symbol, widenRange(ranges.get(ticker.symbol), ticker.price))
     })
     const flushTimer = setInterval(() => {
       if (pending.size === 0) return
       const tickers = [...pending.values()].filter((ticker) =>
         trackedRef.current.has(ticker.symbol),
       )
+      const seen = new Map([...ranges].filter(([symbol]) => trackedRef.current.has(symbol)))
       pending.clear()
+      ranges.clear()
       const { hidden, targets, removeTargets } = usePreferencesStore.getState()
       applyTickers(tickers, new Set(hidden))
 
-      const reached = reachedTargets(targets, tickers, Date.now())
+      const reached = reachedTargets(targets, seen, Date.now())
       if (reached.length === 0) return
       removeTargets(reached.map((alert) => alert.id))
       addAlerts(reached)

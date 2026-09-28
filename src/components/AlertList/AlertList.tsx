@@ -13,10 +13,11 @@ export type AlertView = {
 
 type AlertListProps = {
   alerts: readonly AlertView[]
+  waitingTargets: number
   onDismiss: (id: string) => void
 }
 
-export function AlertList({ alerts, onDismiss }: AlertListProps) {
+export function AlertList({ alerts, waitingTargets, onDismiss }: AlertListProps) {
   const listRef = useRef<HTMLUListElement>(null)
   const regionRef = useRef<HTMLDivElement>(null)
 
@@ -26,8 +27,9 @@ export function AlertList({ alerts, onDismiss }: AlertListProps) {
         <>
           <p className={styles.empty}>No alerts yet</p>
           <p className={styles.hint}>
-            Pairs that move 2% or more since you opened the page, and price targets you set below,
-            show up here.
+            {waitingTargets > 0
+              ? `${waitingTargets} price ${waitingTargets === 1 ? 'target is' : 'targets are'} waiting. Alerts appear here when a target is reached, or when a pair moves 2% since you opened the page.`
+              : 'Pairs that move 2% or more since you opened the page, and price targets you set below, show up here.'}
           </p>
         </>
       ) : (
