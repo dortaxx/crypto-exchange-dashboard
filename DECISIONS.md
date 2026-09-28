@@ -118,6 +118,8 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 - **Chosen:** the direction is fixed when the target is created: a target above the current price waits for a rise, one below waits for a fall. A target equal to the current price is refused. Each target fires once and is deleted, and targets are saved. The feed checks them on every batch.
 - **Why:** fixing the direction removes any ambiguity about "reaching" a price. One-shot targets match how exchange price alerts behave and avoid repeat alerts. Duplicates are refused, and there is a limit of 10.
+- **Every touch counts:** between two checks, the feed remembers each coin's lowest and highest price, and a "falls below" target is tested against the low (a "rises above" target against the high). A dip that touches the target and bounces back is still caught, even in a background tab where the browser slows timers to about once a minute.
+- **Typo guard:** a target more than 50% away from the price that looks like a missing or extra zero (8,300 for a coin at 83,000) shows a warning with the likely intended price. The target can still be added, because a far target can be deliberate.
 
 ## UI
 
