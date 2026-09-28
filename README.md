@@ -4,8 +4,6 @@ A real-time cryptocurrency dashboard built with React and TypeScript on live Bin
 
 **Live demo:** https://crypto-exchange-dashboard-zeta.vercel.app
 
-![Crypto Dashboard](.github/dashboard.png)
-
 It covers all 9 requirements of the brief and all 6 bonus tasks: session price chart, adding and removing pairs, subscribe/unsubscribe on the open socket, price target alerts, light/dark theme, and unit tests.
 
 ## Installation
