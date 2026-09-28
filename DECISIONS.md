@@ -1,170 +1,45 @@
-# Decisions
+# Technical decisions
 
-Each entry covers what was chosen, what else was considered, and why. The README has the short version.
+The main choices in this project, why I made them, and what I didn't do instead.
 
-## Real-time data
+## WebSocket
 
-### 1. `miniTicker` stream on the market-data endpoint
+**1. The connection lives in a plain TypeScript class (`BinanceSocket`), not in a React hook.**
+It contains no React code, so it can be tested with a fake WebSocket and fake timers. React uses it in exactly one place (`useMarketFeed`), which also closes it on unmount.
 
-- **Chosen:** `wss://data-stream.binance.vision/ws` with one `<symbol>@miniTicker` stream per pair.
-- **Alternatives:** `@trade` (one message per trade, often dozens per second for BTC), `@ticker` (a larger payload with fields we don't use), or `@bookTicker`, which is best bid/ask rather than a last price.
-- **Why:** `miniTicker` sends the last price (`c`) and event time (`E`) at most once per second per pair, and only in seconds when the pair traded, so busy coins update about every second and quiet ones less often. That is what a price board needs, without the flood of individual trades. `data-stream.binance.vision` is Binance's public market-data-only host.
-- **Gotcha:** stream names must be **lowercase**. Binance acknowledges `BTCUSDT@miniTicker` but never sends data for it, so `toStreamName` lowercases.
+**2. One connection, with `SUBSCRIBE` / `UNSUBSCRIBE` messages.**
+Adding or removing a pair sends only the difference on the open socket, so the other prices never stop. After a reconnect the app subscribes to every pair again, because Binance forgets subscriptions when a connection closes. _Not chosen:_ a stream URL that lists all pairs, which would need a reconnect every time the list changes.
 
-### 2. One socket, with `SUBSCRIBE` / `UNSUBSCRIBE` messages
+**3. Reconnect with exponential backoff and jitter, then stop.**
+Each wait is a random time up to 1 s, 2 s, 4 s… (at most 30 s), so clients don't all retry at the same moment. After 10 failed attempts the app shows **Retry** instead of trying forever.
 
-- **Chosen:** connect once to `/ws` and manage streams with JSON `SUBSCRIBE` / `UNSUBSCRIBE` requests. The socket remembers what the server currently has and sends only the difference from what the app wants.
-- **Alternatives:** a combined-stream URL (`/stream?streams=a/b/c`), which has to reconnect whenever the pair list changes.
-- **Why:** adding or removing a pair never drops the other streams (bonus task 3). After every (re)connect, the socket subscribes to the full current set again, because Binance forgets subscriptions when a connection closes.
-- **Pacing:** Binance allows about 5 control messages per second per connection. Beyond that it goes quiet and then closes the socket (`1008 Too many requests`). The first change is sent at once. Further changes within the next 500ms are folded together, so a burst of clicks in "Edit pairs" becomes at most one `UNSUBSCRIBE` and one `SUBSCRIBE` every half second.
+**4. Closing on purpose is different from losing the connection.**
+Before closing a socket itself, the app forgets it, and every event handler ignores sockets it no longer owns. So an intentional close never triggers a reconnect, and late events from an old socket are ignored.
 
-### 3. REST snapshot first, then the stream
+**5. Silent connections are checked, not just dropped.**
+If nothing arrives for 10 s, the app asks Binance for its subscription list. A reply means the connection is alive; no reply within 5 s means it's replaced. Quiet coins can go 20 s without a message, so dropping on silence alone would kill healthy connections.
 
-- **Chosen:** on load, one `GET /api/v3/ticker/24hr?symbols=[…]&type=MINI` fills the prices, then the WebSocket keeps them fresh. Later additions fetch a snapshot only for the pairs that have no price yet.
-- **Alternatives:** wait for the first WebSocket message for every pair.
-- **Why:** the table has real numbers within one request instead of skeletons until the socket is up. Both sources write through the same function (`nextPairPrice`), which ignores anything older than the price it already holds (compared by exchange timestamp), so a slow snapshot can't overwrite a newer live price.
+## Data and state
 
-### 4. Reconnect: exponential backoff with full jitter, then give up
+**6. Price updates are applied every 250 ms.**
+Messages are collected (the latest price per pair wins) and written to the store in one go, so the UI renders at most 4 times a second. _Not chosen:_ debounce, which would keep delaying updates while prices keep streaming.
 
-- **Chosen:** the delay is `random(0, min(30s, 1s × 2^(attempt-1)))`. After 10 failed reconnect attempts the state becomes `error` and the header shows **Retry**.
-- **Alternatives:** a fixed delay; backoff without jitter; retrying forever.
-- **Why:** backoff avoids hammering a server that is down, and jitter stops many clients from reconnecting in lockstep. Giving up after 10 tries is more honest than a spinner that never ends, and Retry hands control back to the user.
-- **Detail:** the attempt counter resets on the **first price message**, not on `open`. A socket that opens but never delivers data would otherwise reset the counter each time and retry quickly forever.
+**7. Two stores.**
+Live prices stay in memory. Favorites, hidden pairs and other settings are saved to `localStorage`, and they're checked when loaded so corrupted data can't break the app. Keeping them apart means prices are never written to storage.
 
-### 5. Intentional close vs dropped connection
-
-- **Chosen:** before closing a socket on purpose (unmount, going offline, the watchdog), the class clears its reference to it (`this.socket = null`, then `close()`). Every event handler first checks `socket !== this.socket` and ignores events from a socket that is no longer current.
-- **Why:** `onclose` fires for both kinds of close. Without this guard, an intentional close would trigger a reconnect, and late events from an old socket could corrupt state after a newer socket had opened.
-
-### 6. Watchdog for silent connections, with a liveness check
-
-- **Chosen:** if nothing arrives for 10 seconds while pairs are subscribed, the socket sends `LIST_SUBSCRIPTIONS`. Any reply (a price, an ack or an error) proves the connection is alive and restarts the timer. Only if nothing answers within 5 more seconds is the socket treated as dead and replaced.
-- **Alternatives:** drop the socket after N seconds of silence; rely on `onclose` alone.
-- **Why:** a half-open TCP connection (laptop sleep, Wi-Fi change) can stay "open" without delivering anything, and `onclose` may never fire. Binance also closes every connection after 24 hours. But `miniTicker` only sends in seconds when the pair traded (the price in a message is often unchanged): a live test showed ETC sending 2 messages in 40 seconds. A plain silence timer would keep killing healthy connections for quiet coins. Asking before hanging up separates "quiet" from "dead".
-- **Handshake timeout:** the same 10 seconds also limits how long a new socket may stay in the connecting stage. A network that silently drops traffic would otherwise leave it "connecting" for minutes before the browser gives up, so the retry count would crawl.
-
-### 7. Offline / online events
-
-- **Chosen:** on the browser's `offline` event, stop retrying and show **Disconnected (offline)**. On `online`, reconnect straight away with a fresh attempt count.
-- **Why:** retrying while there is no network only burns through the 10 attempts and ends in a misleading error.
-
-### 8. Batching updates every 250ms
-
-- **Chosen:** incoming tickers go into a `Map` keyed by symbol (the latest one wins), which is flushed to the store every 250ms.
-- **Alternatives:** write to the store on every message; throttle per symbol; `requestAnimationFrame`; debounce.
-- **Why:** there is one store write, and so at most one render pass, every 250ms however many messages arrive, while prices still feel live. Only the latest price per pair matters for display, so dropping the in-between prices is safe. Debounce would be wrong here: a steady stream would keep postponing the update forever.
-- **Trade-off:** a spike that crosses ±2% and comes back within 250ms would not trigger an alert. At about 1 message per second per pair, that almost never happens.
-
-### 9. Pair changes filter the stream at two layers
-
-- **Chosen:** the socket drops tickers for symbols it no longer follows. The feed hook also filters the pending batch against the current pair list before flushing. Removing a pair forgets its prices and alert state.
-- **Why:** after `UNSUBSCRIBE`, Binance can still deliver a message or two, and a ticker may already be waiting in the batch. Without the filters, a removed pair could reappear or raise an alert.
-
-## State
-
-### 10. Two stores
-
-- **Chosen:** `marketStore` (prices, alert state, alerts, connection; in memory only) and `preferencesStore` (pairs, favorites, hidden, view, sort, price targets, theme; persisted).
-- **Alternatives:** one store with a `partialize` filter; React Context.
-- **Why:** they change at very different rates. Prices update several times per second, and Zustand's `persist` writes on every `set`, so one combined store would write `localStorage` constantly. Context would re-render every consumer on every price change. Zustand selectors re-render only the components whose slice changed.
-
-### 11. Validate saved preferences on load
-
-- **Chosen:** `persist`'s `merge` passes the saved JSON through `sanitizePreferences`. It keeps only known symbols, removes duplicates, checks every enum and price target, and falls back to defaults for anything else. Favorites, hidden pairs and targets for pairs that are no longer followed are dropped.
-- **Why:** `localStorage` is user-editable and survives app updates. A corrupted or old value must never crash the app or subscribe to a symbol that doesn't exist.
-- **Several tabs:** `persist` writes the whole preferences object on every change, so a second open tab would overwrite the first tab's changes with its stale copy. A `storage` event listener (`useCrossTabPreferences`) reloads the preferences whenever another tab saves them.
-
-### 12. Containers vs presentational components, enforced by lint
-
-- **Chosen:** `containers/` read stores and build view data, and `components/` only take props. ESLint `no-restricted-imports` makes it a lint error for a component to import a store, service, hook or container, or for `domain/` / `services/` to import React.
-- **Why:** components stay reusable and easy to reason about, and the separation the brief asks for is checked automatically, not just by convention.
+**8. Containers and components are separate, and ESLint enforces it.**
+Containers read the stores; components only receive props. Lint fails if a component imports a store or service, or if `domain/` or `services/` import React.
 
 ## Product rules
 
-### 13. "Price change" = % since you opened the page
+**9. "Price change" means % change since the page was opened.**
+The brief compares prices with the first price received, so the column, the sorting and the alerts all use this same number. _Not chosen:_ Binance's 24-hour change.
 
-- **Chosen:** for sorting, the "Since open" column, stats and alerts, the change is measured from the first price received for each pair after the page loads.
-- **Alternatives:** Binance's 24-hour change (`P` in the full ticker).
-- **Why:** the brief defines the alert baseline as the first price after load. Using the same number everywhere means the column, the sort and the alerts never disagree. The baseline is not persisted and survives reconnects, so a dropped connection doesn't reset it.
+**10. ±2% alerts don't repeat.**
+An alert fires when a pair reaches ±2%, and can fire again only after the pair comes back inside ±1.5%. Without that gap, a price hovering around 2% would alert on every update. Hidden pairs keep updating but don't raise these alerts.
 
-### 14. ±2% alert with hysteresis
+**11. The converter goes through USDT.**
+Every pair is quoted in USDT, so `amount × fromPrice ÷ toPrice` converts any two coins (USDT itself = 1). Inputs use a text field with our own check, which rejects negatives, signs and `1e5`. A number field would accept those.
 
-- **Chosen:** alert at |change| ≥ 2% (inclusive). Once a pair has alerted, it must return inside **±1.5%** before it can alert again. Going straight from +2.5% to −2.5% is a new alert, because the direction changed.
-- **Alternatives:** alert again every time the price is outside 2%; re-arm as soon as the price is back under 2%.
-- **Why:** the brief forbids duplicate alerts while a pair stays beyond the threshold. Without a gap between the "fire" and "re-arm" levels, a price oscillating around 2.00% would alert on every tick.
-- **Detail:** the check uses the change **rounded to 2 decimals**, and the screen shows that same rounded number (`formatPercent` calls `roundPercent`), so what you see and what is checked can never disagree. Floating point makes `2.5 → 2.55` equal `1.9999999999999927%`, and halves round away from zero, so −1.995% becomes −2.00% exactly like +1.995% becomes +2.00%.
-
-### 15. Hidden pairs don't raise ±2% alerts
-
-- **Why:** hiding means "I don't want to see this". Hidden pairs are also left out of the top gainer and loser stats. Their prices keep updating, so restoring a pair is instant and its baseline stays correct. Price targets are explicit requests, so they still fire for hidden pairs.
-
-### 16. Hide vs remove
-
-- **Hide** (brief requirement 6) keeps the pair subscribed and restorable, and is saved. **Remove** (Edit pairs) unsubscribes it, forgets its data, and drops its favorite, hidden and target entries.
-- **Why:** they solve different problems, a temporary declutter versus changing what you follow. Remove lives in a separate panel so it can't be clicked by accident next to hide. At least one pair always stays followed.
-
-### 17. Converter goes through USDT
-
-- **Chosen:** every tracked coin is priced in USDT, so `amount × fromPrice / toPrice` converts any pair of coins. USDT itself is priced at exactly 1.
-- **Why:** there are only USDT pairs, so a direct BTC→ETH price doesn't exist. Two USDT legs are exact enough for a dashboard, and the result updates whenever either price moves.
-
-### 18. Own number parser, text input
-
-- **Chosen:** `<input type="text" inputMode="decimal">` with `parseAmount`, which accepts digits with one `.` or `,` and rejects signs, exponents (`1e5`), repeated separators, input over 18 characters and anything else. Negatives get their own message ("Amounts can’t be negative."); every other invalid input says "Enter a number, like 0.5". An empty field is not an error, the result just shows "—".
-- **Alternatives:** `<input type="number">`.
-- **Why:** number inputs accept `e`, `+` and `-`, return an empty string for invalid text instead of reporting it, and behave differently across browsers. Accepting `,` supports locales where it is the decimal separator.
-
-### 19. Price targets
-
-- **Chosen:** the direction is fixed when the target is created: a target above the current price waits for a rise, one below waits for a fall. A target equal to the current price is refused. Each target fires once and is deleted, and targets are saved. The feed checks them on every batch.
-- **Why:** fixing the direction removes any ambiguity about "reaching" a price. One-shot targets match how exchange price alerts behave and avoid repeat alerts. Duplicates are refused, and there is a limit of 10.
-- **Every touch counts:** between two checks, the feed remembers each coin's lowest and highest price, and a "falls below" target is tested against the low (a "rises above" target against the high). A dip that touches the target and bounces back is still caught, even in a background tab where the browser slows timers to about once a minute.
-- **Typo guard:** a target more than 50% away from the price that looks like a missing or extra zero (8,300 for a coin at 83,000) shows a warning with the likely intended price. The target can still be added, because a far target can be deliberate.
-
-## UI
-
-### 20. Hand-drawn SVG chart instead of a chart library
-
-- **Chosen:** a pure `buildPriceChart` function turns the session history into SVG paths, round axis ticks and a frame, and the component draws it. Coordinates are percentages in a stretched `viewBox`. Text, grid lines, the crosshair and the dot are HTML overlays, so they stay crisp at any size.
-- **Alternatives:** Recharts, Chart.js or lightweight-charts.
-- **Why:** the brief asks for "a small price history chart". A library would add tens of kilobytes and its own styling system for one line, one area and two axes. The maths is small and fully unit-tested.
-- **Details:**
-  - **Scaling.** The vertical range is at least 0.05% of the price, so a one-cent move isn't stretched into a cliff.
-  - **History size.** It is capped at 600 points per pair. When full, every second point is dropped, so the chart always spans the whole session at bounded memory (the first point, the opening price, is always kept).
-  - **Time labels.** The chart measures its width, asks for fewer ticks when narrow, and pins the start and latest times to the edges.
-
-### 21. Theme with `light-dark()` and a pre-paint script
-
-- **Chosen:** each themed colour token is defined once as `light-dark(light, dark)` (the accent is the same in both themes). Switching theme sets `data-theme="light"` or `"dark"` on `<html>` (or removes it for "system"), and two CSS rules turn that into `color-scheme`, which every `light-dark()` token follows. The browser's `theme-color` bar is updated to match. Without a saved choice, it follows the system. A few lines of inline script in `index.html` read the saved theme and set it before React loads.
-- **Alternatives:** duplicate token blocks for `[data-theme]` and the media query; applying the theme only from React.
-- **Why:** there's a single source of truth for every colour. Without the pre-paint script, a light-theme user would see a dark flash on every reload while React loads.
-
-### 22. Custom coin picker instead of `<select>`
-
-- **Why:** a native `<select>` can't show coin icons or match the design. The custom picker follows the ARIA listbox pattern: arrow keys, Home/End, type-ahead, Enter/Space, Escape, and closing on an outside click.
-
-### 23. Loading, empty and error states are separate
-
-- Skeletons appear while the first prices load, staggered per row. An empty search, empty favorites and all pairs hidden each get their own message and a relevant action ("Clear search", "Show all pairs", "Show hidden pairs", or "Add Dogecoin" when you search for a coin you don't follow). A failed REST snapshot shows an error only while there are no prices at all. As soon as live data arrives, it clears.
-
-### 24. Status labels follow the brief's wording
-
-- The badge reads **Connecting…** (first load), **Connected**, **Reconnecting (try n)…** (for the whole retry, including while the new socket is opening), **Disconnected (offline)** when the browser has no network, and **Connection lost** + **Retry** once the socket has given up. These are the brief's Connected / Reconnecting / Disconnected states, plus the error state.
-- On phones, the wordmark next to the logo is visually hidden (screen readers still read it) and the letter spacing tightens, so every state, including Retry, fits in 320px.
-
-### 25. Screen readers and focus
-
-- Live prices update several times a second, so they are **not** in live regions. Otherwise a screen reader would talk non-stop. What is announced: validation errors, the number of search results, connection state changes, new alerts, and the loading or error message.
-- When the control you used disappears (hiding a row, dismissing an alert, removing a target, restoring the last hidden pair), focus moves to the same control in the next row, or to a sensible neighbour, instead of falling back to the top of the page. If the whole list disappears, focus goes to the search box (markets), the alerts area, or the status badge (after Retry).
-- **Rows don't jump while you use them.** When sorted by price or change, the order is frozen while the pointer or keyboard focus is inside the table body and catches up as soon as you leave. Otherwise a live re-sort could move a row away just as you click its star, and moving a focused row makes the browser drop keyboard focus.
-
-## Tooling
-
-### 26. Strict TypeScript and lint
-
-- `strict`, `noUncheckedIndexedAccess` (array and record lookups may be `undefined`), `verbatimModuleSyntax` and `erasableSyntaxOnly` are on. No `any`, and unknown JSON is narrowed with type guards (`isRecord`, `parseSocketMessage`).
-- typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, React hooks rules, and Prettier via `eslint-config-prettier`.
-
-### 27. React StrictMode in development
-
-- StrictMode mounts effects twice in development, so the app briefly opens a socket and closes it again. Chrome may log one "closed before the connection is established" warning. This is expected and proves the cleanup works. The production build opens exactly one socket.
+**12. The chart is plain SVG.**
+The brief asks for a small chart: one line and two axes. A chart library would add size for little gain, and the maths is small and unit-tested.
