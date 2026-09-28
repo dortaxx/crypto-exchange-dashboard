@@ -11,18 +11,21 @@ export type AlertView = {
 
 type AlertListProps = {
   alerts: readonly AlertView[]
+  waitingTargets: number
   alertAtPercent: number
+  onDismiss: (id: string) => void
 }
 
-export function AlertList({ alerts, alertAtPercent }: AlertListProps) {
+export function AlertList({ alerts, waitingTargets, alertAtPercent, onDismiss }: AlertListProps) {
   return (
     <div aria-live="polite">
       {alerts.length === 0 ? (
         <>
           <p className={styles.empty}>No alerts yet</p>
           <p className={styles.hint}>
-            Pairs that move {alertAtPercent}% or more since you opened the page, and price targets
-            you set below, show up here.
+            {waitingTargets > 0
+              ? `${waitingTargets} price ${waitingTargets === 1 ? 'target is' : 'targets are'} waiting. Alerts appear here when a target is reached, or when a pair moves ${alertAtPercent}% since you opened the page.`
+              : `Pairs that move ${alertAtPercent}% or more since you opened the page, and price targets you set below, show up here.`}
           </p>
         </>
       ) : (
@@ -38,6 +41,16 @@ export function AlertList({ alerts, alertAtPercent }: AlertListProps) {
                   {alert.prices} · {alert.time}
                 </p>
               </div>
+              <button
+                type="button"
+                className={styles.dismiss}
+                aria-label={`Dismiss: ${alert.message}`}
+                onClick={() => {
+                  onDismiss(alert.id)
+                }}
+              >
+                ×
+              </button>
             </li>
           ))}
         </ul>

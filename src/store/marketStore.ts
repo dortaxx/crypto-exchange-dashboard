@@ -14,6 +14,7 @@ type MarketState = {
   applyTickers: (tickers: readonly Ticker[]) => void
   retainPairs: (symbols: readonly string[]) => void
   addAlerts: (alerts: readonly PriceAlert[]) => void
+  dismissAlert: (id: string) => void
   setConnection: (connection: ConnectionState) => void
 }
 
@@ -61,5 +62,7 @@ export const useMarketStore = create<MarketState>()((set) => ({
     set((state) =>
       alerts.length === 0 ? state : { alerts: [...alerts, ...state.alerts].slice(0, MAX_ALERTS) },
     ),
+  dismissAlert: (id) =>
+    set((state) => ({ alerts: state.alerts.filter((alert) => alert.id !== id) })),
   setConnection: (connection) => set({ connection }),
 }))

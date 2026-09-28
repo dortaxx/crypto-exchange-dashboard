@@ -1,14 +1,23 @@
 import { useId } from 'react'
-import { CoinSelect, type CoinOption } from '../CoinSelect/CoinSelect'
+import { AssetPicker, type AssetOption } from '../AssetPicker/AssetPicker'
 import styles from './Converter.module.css'
 
+export type { AssetOption }
+
+export type QuickAmount = {
+  label: string
+  value: string
+}
+
 type ConverterProps = {
-  assets: readonly CoinOption[]
+  assets: readonly AssetOption[]
   from: string
   to: string
   amount: string
   result: string | null
+  rate: string | null
   message: string | null
+  quickAmounts: readonly QuickAmount[]
   onAmountChange: (value: string) => void
   onFromChange: (code: string) => void
   onToChange: (code: string) => void
@@ -21,7 +30,9 @@ export function Converter({
   to,
   amount,
   result,
+  rate,
   message,
+  quickAmounts,
   onAmountChange,
   onFromChange,
   onToChange,
@@ -42,6 +53,7 @@ export function Converter({
               type="text"
               inputMode="decimal"
               autoComplete="off"
+              spellCheck={false}
               placeholder="0.00"
               value={amount}
               aria-invalid={message !== null}
@@ -51,7 +63,7 @@ export function Converter({
               }}
             />
           </label>
-          <CoinSelect label="Convert from" value={from} options={assets} onChange={onFromChange} />
+          <AssetPicker label="Convert from" value={from} assets={assets} onChange={onFromChange} />
         </div>
 
         <button type="button" className={styles.swap} aria-label="Swap currencies" onClick={onSwap}>
@@ -65,13 +77,36 @@ export function Converter({
             <span className={styles.caption}>You get</span>
             <span className={styles.result}>{result ?? '—'}</span>
           </div>
-          <CoinSelect label="Convert to" value={to} options={assets} onChange={onToChange} />
+          <AssetPicker label="Convert to" value={to} assets={assets} onChange={onToChange} />
         </div>
       </div>
 
-      <p id={noteId} className={styles.error}>
-        {message}
+      <p id={noteId} className={message === null ? styles.note : styles.error}>
+        <svg className={styles.info} viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.5" />
+          <path d="M8 7.25v4M8 4.75v.01" />
+        </svg>
+        {message ?? rate ?? 'Waiting for prices…'}
       </p>
+      <p className="visually-hidden" role="status">
+        {message ?? ''}
+      </p>
+
+      <div className={styles.chips} role="group" aria-label="Quick amounts">
+        {quickAmounts.map((quick) => (
+          <button
+            key={quick.value}
+            type="button"
+            className={styles.chip}
+            aria-pressed={amount === quick.value}
+            onClick={() => {
+              onAmountChange(quick.value)
+            }}
+          >
+            {quick.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

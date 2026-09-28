@@ -10,8 +10,19 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-4);
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
+}
+
+.pair {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.symbol {
+  margin-left: var(--space-1);
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .quote {
@@ -29,6 +40,13 @@
   letter-spacing: -0.02em;
 }
 
+.unavailable {
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-family: var(--font-figures);
+  font-size: 1.75rem;
+}
+
 .unit {
   color: var(--text-muted);
   font-size: var(--text-sm);
@@ -37,6 +55,21 @@
 .change {
   margin-left: var(--space-2);
   font-size: var(--text-sm);
+}
+
+.open {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  color: var(--text-muted);
+  font-family: var(--font-figures);
+  font-size: var(--text-xs);
+}
+
+.open::before {
+  width: 1.25rem;
+  border-top: 1px dashed currentColor;
+  content: '';
 }
 
 .plot {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatPercent, formatPrice } from './format'
+import { formatAxisPrice, formatPercent, formatPrice } from './format'
 
 describe('formatPercent', () => {
   it('shows the same rounded number the alert rule checks', () => {
@@ -15,5 +15,15 @@ describe('formatPrice', () => {
     expect(formatPrice(84_720.5)).toBe('84,720.50')
     expect(formatPrice(1.53051)).toBe('1.5305')
     expect(formatPrice(0.0975401)).toBe('0.097540')
+  })
+})
+
+describe('formatAxisPrice', () => {
+  it('shows enough decimals to tell neighbouring ticks apart', () => {
+    expect(formatAxisPrice(13.945, 0.005)).toBe('13.945')
+  })
+
+  it('keeps the usual decimals when the step is coarse', () => {
+    expect(formatAxisPrice(84_760, 10)).toBe('84,760.00')
   })
 })

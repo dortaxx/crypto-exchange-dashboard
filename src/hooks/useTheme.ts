@@ -25,6 +25,12 @@ export function useTheme(): { theme: 'light' | 'dark'; toggleTheme: () => void }
     const root = document.documentElement
     if (choice === 'system') root.removeAttribute('data-theme')
     else root.setAttribute('data-theme', choice)
+
+    const pageColor = getComputedStyle(document.body).backgroundColor
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+      meta.dataset.systemColor ??= meta.content
+      meta.content = choice === 'system' ? meta.dataset.systemColor : pageColor
+    }
   }, [choice])
 
   return {
