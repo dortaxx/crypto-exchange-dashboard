@@ -1,4 +1,5 @@
 import { useId, useRef } from 'react'
+import { targetVerb } from '../../domain/targets'
 import { AssetPicker, type AssetOption } from '../AssetPicker/AssetPicker'
 import { focusAfterRemoval } from '../focusAfterRemoval'
 import { TrendIcon } from '../TrendIcon/TrendIcon'
@@ -44,7 +45,6 @@ export function PriceTargets({
   const noteId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
-  const verb = (direction: 'up' | 'down') => (direction === 'up' ? 'rises above' : 'falls below')
 
   return (
     <div className={styles.targets}>
@@ -97,13 +97,13 @@ export function PriceTargets({
             <li key={target.id} className={styles.item} data-direction={target.direction}>
               <TrendIcon direction={target.direction} />
               <span className={styles.text}>
-                <strong>{target.asset}</strong> {verb(target.direction)}{' '}
+                <strong>{target.asset}</strong> {targetVerb(target.direction)}{' '}
                 <span className={styles.figure}>{target.price}</span>
               </span>
               <button
                 type="button"
                 className={styles.remove}
-                aria-label={`Remove target: ${target.asset} ${verb(target.direction)} ${target.price}`}
+                aria-label={`Remove target: ${target.asset} ${targetVerb(target.direction)} ${target.price}`}
                 data-action="remove-target"
                 onClick={() => {
                   onRemove(target.id)

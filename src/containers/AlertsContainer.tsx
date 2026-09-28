@@ -1,5 +1,6 @@
 import { AlertList, type AlertView } from '../components/AlertList/AlertList'
 import { PAIR_CATALOG } from '../config/pairs'
+import { ALERT_AT_PERCENT } from '../domain/alerts'
 import { formatPrice, formatTime } from '../domain/format'
 import type { PriceAlert } from '../domain/types'
 import { useMarketStore } from '../store/marketStore'
@@ -39,6 +40,7 @@ export function AlertsContainer() {
     <AlertList
       alerts={alerts.map(toView)}
       waitingTargets={waitingTargets}
+      alertAtPercent={ALERT_AT_PERCENT}
       onDismiss={dismissAlert}
     />
   )

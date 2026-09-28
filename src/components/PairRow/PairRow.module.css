@@ -91,23 +91,6 @@
   animation: flash-down 0.9s ease-out;
 }
 
-.change {
-  display: inline-flex;
-  gap: 0.375rem;
-  align-items: center;
-  font-family: var(--font-figures);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.change[data-trend='up'] {
-  color: var(--up);
-}
-
-.change[data-trend='down'] {
-  color: var(--down);
-}
-
 @keyframes flash-up {
   from {
     color: color-mix(in srgb, var(--up) 45%, var(--flash-base));

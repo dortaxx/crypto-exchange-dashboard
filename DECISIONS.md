@@ -45,7 +45,7 @@ Each entry covers what was chosen, what else was considered, and why. The README
 
 ### 7. Offline / online events
 
-- **Chosen:** on the browser's `offline` event, stop retrying and show **Offline**. On `online`, reconnect straight away with a fresh attempt count.
+- **Chosen:** on the browser's `offline` event, stop retrying and show **Disconnected (offline)**. On `online`, reconnect straight away with a fresh attempt count.
 - **Why:** retrying while there is no network only burns through the 10 attempts and ends in a misleading error.
 
 ### 8. Batching updates every 250ms

@@ -67,7 +67,12 @@ export type ConnectionState =
   | { status: 'disconnected'; reason: 'stopped' | 'offline' }
   | { status: 'error'; message: string }
 
-export type ViewMode = 'all' | 'favorites'
-export type ThemeChoice = 'system' | 'light' | 'dark'
-export type SortKey = 'name' | 'price' | 'change'
-export type SortDirection = 'asc' | 'desc'
+export const VIEW_MODES = ['all', 'favorites'] as const
+export const THEME_CHOICES = ['system', 'light', 'dark'] as const
+export const SORT_KEYS = ['name', 'price', 'change'] as const
+export const SORT_DIRECTIONS = ['asc', 'desc'] as const
+
+export type ViewMode = (typeof VIEW_MODES)[number]
+export type ThemeChoice = (typeof THEME_CHOICES)[number]
+export type SortKey = (typeof SORT_KEYS)[number]
+export type SortDirection = (typeof SORT_DIRECTIONS)[number]

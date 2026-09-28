@@ -6,10 +6,16 @@ import {
 } from '../components/PriceTargets/PriceTargets'
 import { parseAmount } from '../domain/amount'
 import { formatPrice } from '../domain/format'
-import { likelyIntended, targetDirection } from '../domain/targets'
+import {
+  MAX_TARGETS,
+  likelyIntended,
+  targetDirection,
+  targetProblem,
+  targetVerb,
+} from '../domain/targets'
 import type { Pair, PriceTarget } from '../domain/types'
 import { useMarketStore } from '../store/marketStore'
-import { MAX_TARGETS, usePreferencesStore } from '../store/preferencesStore'
+import { usePreferencesStore } from '../store/preferencesStore'
 
 type PriceTargetsContainerProps = {
   pairs: readonly Pair[]
@@ -44,27 +50,23 @@ function checkTarget(
   if (!parsed.ok) return problem('Enter a price, like 85000.')
   if (parsed.value === 0) return problem('Enter a price above zero.')
   if (current === undefined) return waiting
-  if (targets.length >= MAX_TARGETS) {
-    return problem(`You can keep ${MAX_TARGETS} targets. Remove one first.`)
-  }
-  if (targets.some((target) => target.symbol === pair.symbol && target.price === parsed.value)) {
-    return problem('You already have this target.')
-  }
+  const blocked = targetProblem(targets, pair.symbol, parsed.value)
+  if (blocked === 'full') return problem(`You can keep ${MAX_TARGETS} targets. Remove one first.`)
+  if (blocked === 'duplicate') return problem('You already have this target.')
 
   const direction = targetDirection(current, parsed.value)
   if (direction === null) return problem(`${pair.base} is already at that price.`)
-  const verb = direction === 'up' ? 'rises above' : 'falls below'
   const target = { price: parsed.value, direction }
   const intended = likelyIntended(parsed.value, current)
   if (intended !== null) {
     return {
-      note: `${formatPrice(parsed.value)} is far from ${pair.base}’s price of ${formatPrice(current)}. Did you mean ${formatPrice(intended)}?`,
+      note: `${formatPrice(parsed.value)} is far from ${pair.base}’s current price. Did you mean ${formatPrice(intended)}?`,
       tone: 'warning',
       target,
     }
   }
   return {
-    note: `Alerts when ${pair.base} ${verb} ${formatPrice(parsed.value)} · now ${formatPrice(current)}`,
+    note: `Alerts when ${pair.base} ${targetVerb(direction)} ${formatPrice(parsed.value)} · now ${formatPrice(current)}`,
     tone: 'info',
     target,
   }

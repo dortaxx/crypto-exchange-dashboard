@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { DEFAULT_SYMBOLS, PAIR_CATALOG } from '../config/pairs'
+import { targetProblem } from '../domain/targets'
 import type { PriceTarget, SortKey, ThemeChoice, ViewMode } from '../domain/types'
 import { sanitizePreferences, type SavedPreferences } from './sanitizePreferences'
 
@@ -28,7 +29,6 @@ const DEFAULTS: SavedPreferences = {
   theme: 'system',
 }
 
-export const MAX_TARGETS = 10
 export const PREFERENCES_STORAGE_KEY = 'crypto-dashboard:preferences'
 
 const KNOWN_SYMBOLS = new Set(PAIR_CATALOG.map((pair) => pair.symbol))
@@ -68,10 +68,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         ),
       addTarget: (target) =>
         set((state) => {
-          const duplicate = state.targets.some(
-            (existing) => existing.symbol === target.symbol && existing.price === target.price,
-          )
-          if (duplicate || state.targets.length >= MAX_TARGETS) return state
+          if (targetProblem(state.targets, target.symbol, target.price) !== null) return state
           return {
             targets: [{ ...target, id: targetId(), createdAt: Date.now() }, ...state.targets],
           }

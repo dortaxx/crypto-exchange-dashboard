@@ -1,10 +1,10 @@
-import { formatPercent, formatPrice } from '../../domain/format'
+import { formatPrice } from '../../domain/format'
 import { changeTrend } from '../../domain/trend'
 import type { Pair, PairPrice } from '../../domain/types'
 import { PairSwitcher } from '../PairSwitcher/PairSwitcher'
+import { PercentChange } from '../PercentChange/PercentChange'
 import { PriceChart } from '../PriceChart/PriceChart'
 import { Skeleton } from '../Skeleton/Skeleton'
-import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './SessionChart.module.css'
 
 type SessionChartProps = {
@@ -33,10 +33,7 @@ export function SessionChart({ pairs, pair, price, unavailable, onSelect }: Sess
             <p className={styles.quote}>
               <span className={styles.price}>{formatPrice(price.price)}</span>
               <span className={styles.unit}>{pair.quote}</span>
-              <span className={styles.change} data-trend={trend}>
-                {trend !== 'flat' && <TrendIcon direction={trend} />}
-                {formatPercent(price.changePercent)}
-              </span>
+              <PercentChange changePercent={price.changePercent} className={styles.change} />
             </p>
           )}
         </div>

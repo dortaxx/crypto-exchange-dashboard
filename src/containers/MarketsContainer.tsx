@@ -1,6 +1,6 @@
 import { useId, useState, type ComponentProps } from 'react'
 import { EmptyState } from '../components/EmptyState/EmptyState'
-import { focusAfterRemoval } from '../components/focusAfterRemoval'
+import { refocus } from '../components/focusAfterRemoval'
 import { HiddenPairsPanel } from '../components/HiddenPairsPanel/HiddenPairsPanel'
 import { MarketsToolbar } from '../components/MarketsToolbar/MarketsToolbar'
 import { PairManager } from '../components/PairManager/PairManager'
@@ -130,7 +130,7 @@ export function MarketsContainer({ pairs }: MarketsContainerProps) {
       ...empty.action,
       onClick: () => {
         empty.action?.onClick()
-        focusAfterRemoval(null, '', 0, document.getElementById(searchId))
+        refocus(document.getElementById(searchId))
       },
     },
   }

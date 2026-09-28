@@ -1,4 +1,15 @@
-import type { PriceTarget, SortDirection, SortKey, ThemeChoice, ViewMode } from '../domain/types'
+import {
+  SORT_DIRECTIONS,
+  SORT_KEYS,
+  THEME_CHOICES,
+  VIEW_MODES,
+  type PriceTarget,
+  type SortDirection,
+  type SortKey,
+  type ThemeChoice,
+  type ViewMode,
+} from '../domain/types'
+import { isRecord } from '../domain/guards'
 
 export type SavedPreferences = {
   pairs: string[]
@@ -9,10 +20,6 @@ export type SavedPreferences = {
   sortDirection: SortDirection
   targets: PriceTarget[]
   theme: ThemeChoice
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
 }
 
 function knownSymbols(value: unknown, known: ReadonlySet<string>): string[] {
@@ -53,10 +60,10 @@ export function sanitizePreferences(
     pairs,
     favorites: knownSymbols(saved.favorites, tracked),
     hidden: knownSymbols(saved.hidden, tracked),
-    view: oneOf(saved.view, ['all', 'favorites'], defaults.view),
-    sortKey: oneOf(saved.sortKey, ['name', 'price', 'change'], defaults.sortKey),
-    sortDirection: oneOf(saved.sortDirection, ['asc', 'desc'], defaults.sortDirection),
+    view: oneOf(saved.view, VIEW_MODES, defaults.view),
+    sortKey: oneOf(saved.sortKey, SORT_KEYS, defaults.sortKey),
+    sortDirection: oneOf(saved.sortDirection, SORT_DIRECTIONS, defaults.sortDirection),
     targets: savedTargets(saved.targets, tracked),
-    theme: oneOf(saved.theme, ['system', 'light', 'dark'], defaults.theme),
+    theme: oneOf(saved.theme, THEME_CHOICES, defaults.theme),
   }
 }

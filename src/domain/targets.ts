@@ -3,9 +3,11 @@ import type { PriceTarget, TargetAlert } from './types'
 export type PriceRange = {
   low: number
   high: number
+  last: number
 }
 
 const TYPO_DISTANCE = 0.5
+export const MAX_TARGETS = 10
 
 export function targetDirection(currentPrice: number, targetPrice: number): 'up' | 'down' | null {
   if (targetPrice > currentPrice) return 'up'
@@ -18,19 +20,21 @@ export function isTargetReached(target: PriceTarget, price: number): boolean {
 }
 
 export function widenRange(range: PriceRange | undefined, price: number): PriceRange {
-  if (range === undefined) return { low: price, high: price }
-  return { low: Math.min(range.low, price), high: Math.max(range.high, price) }
+  if (range === undefined) return { low: price, high: price, last: price }
+  return { low: Math.min(range.low, price), high: Math.max(range.high, price), last: price }
 }
 
 export function reachedTargets(
   targets: readonly PriceTarget[],
   ranges: ReadonlyMap<string, PriceRange>,
+  rangeStart: number,
   now: number,
 ): TargetAlert[] {
   return targets.flatMap((target): TargetAlert[] => {
     const range = ranges.get(target.symbol)
     if (range === undefined) return []
-    const price = target.direction === 'up' ? range.high : range.low
+    const extreme = target.direction === 'up' ? range.high : range.low
+    const price = target.createdAt > rangeStart ? range.last : extreme
     if (!isTargetReached(target, price)) return []
     return [
       {
@@ -52,4 +56,20 @@ export function likelyIntended(targetPrice: number, currentPrice: number): numbe
   if (shift === 0) return null
   const suggestion = Number((targetPrice * 10 ** shift).toPrecision(12))
   return Math.abs(suggestion - currentPrice) / currentPrice <= TYPO_DISTANCE ? suggestion : null
+}
+
+export function targetProblem(
+  targets: readonly PriceTarget[],
+  symbol: string,
+  price: number,
+): 'full' | 'duplicate' | null {
+  if (targets.length >= MAX_TARGETS) return 'full'
+  if (targets.some((target) => target.symbol === symbol && target.price === price)) {
+    return 'duplicate'
+  }
+  return null
+}
+
+export function targetVerb(direction: 'up' | 'down'): string {
+  return direction === 'up' ? 'rises above' : 'falls below'
 }

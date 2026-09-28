@@ -1,0 +1,16 @@
+.change {
+  display: inline-flex;
+  gap: 0.375rem;
+  align-items: center;
+  font-family: var(--font-figures);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.change[data-trend='up'] {
+  color: var(--up);
+}
+
+.change[data-trend='down'] {
+  color: var(--down);
+}

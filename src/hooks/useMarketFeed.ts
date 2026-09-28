@@ -17,6 +17,7 @@ export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
     socketRef.current = socket
     const pending = new Map<string, Ticker>()
     const ranges = new Map<string, PriceRange>()
+    let rangeStart = Date.now()
 
     const stopListeningToState = socket.onStateChange(setConnection)
     const stopListeningToTickers = socket.onTicker((ticker) => {
@@ -29,12 +30,14 @@ export function useMarketFeed(pairs: readonly Pair[]): { retry: () => void } {
         trackedRef.current.has(ticker.symbol),
       )
       const seen = new Map([...ranges].filter(([symbol]) => trackedRef.current.has(symbol)))
+      const seenSince = rangeStart
+      rangeStart = Date.now()
       pending.clear()
       ranges.clear()
       const { hidden, targets, removeTargets } = usePreferencesStore.getState()
       applyTickers(tickers, new Set(hidden))
 
-      const reached = reachedTargets(targets, seen, Date.now())
+      const reached = reachedTargets(targets, seen, seenSince, rangeStart)
       if (reached.length === 0) return
       removeTargets(reached.map((alert) => alert.id))
       addAlerts(reached)

@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import type { ConnectionState } from '../../domain/types'
-import { focusAfterRemoval } from '../focusAfterRemoval'
+import { refocus } from '../focusAfterRemoval'
 import styles from './ConnectionStatusBadge.module.css'
 import { describeConnection } from './describeConnection'
 
@@ -33,7 +33,7 @@ export function ConnectionStatusBadge({ connection, onRetry }: ConnectionStatusB
           className={styles.retry}
           onClick={() => {
             onRetry()
-            focusAfterRemoval(null, '', 0, statusRef.current)
+            refocus(statusRef.current)
           }}
         >
           Retry

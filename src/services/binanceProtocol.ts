@@ -1,6 +1,6 @@
 import { parsePrice } from '../domain/price'
 import type { Ticker } from '../domain/types'
-import { isRecord } from './guards'
+import { isRecord } from '../domain/guards'
 
 export const BINANCE_STREAM_URL = 'wss://data-stream.binance.vision/ws'
 

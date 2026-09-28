@@ -1,6 +1,6 @@
 import { parsePrice } from '../domain/price'
 import type { Ticker } from '../domain/types'
-import { isRecord } from './guards'
+import { isRecord } from '../domain/guards'
 
 const REST_BASE_URL = 'https://data-api.binance.vision/api/v3'
 

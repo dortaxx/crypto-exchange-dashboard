@@ -14,10 +14,11 @@ export type AlertView = {
 type AlertListProps = {
   alerts: readonly AlertView[]
   waitingTargets: number
+  alertAtPercent: number
   onDismiss: (id: string) => void
 }
 
-export function AlertList({ alerts, waitingTargets, onDismiss }: AlertListProps) {
+export function AlertList({ alerts, waitingTargets, alertAtPercent, onDismiss }: AlertListProps) {
   const listRef = useRef<HTMLUListElement>(null)
   const regionRef = useRef<HTMLDivElement>(null)
 
@@ -28,8 +29,8 @@ export function AlertList({ alerts, waitingTargets, onDismiss }: AlertListProps)
           <p className={styles.empty}>No alerts yet</p>
           <p className={styles.hint}>
             {waitingTargets > 0
-              ? `${waitingTargets} price ${waitingTargets === 1 ? 'target is' : 'targets are'} waiting. Alerts appear here when a target is reached, or when a pair moves 2% since you opened the page.`
-              : 'Pairs that move 2% or more since you opened the page, and price targets you set below, show up here.'}
+              ? `${waitingTargets} price ${waitingTargets === 1 ? 'target is' : 'targets are'} waiting. Alerts appear here when a target is reached, or when a pair moves ${alertAtPercent}% since you opened the page.`
+              : `Pairs that move ${alertAtPercent}% or more since you opened the page, and price targets you set below, show up here.`}
           </p>
         </>
       ) : (
@@ -39,7 +40,7 @@ export function AlertList({ alerts, waitingTargets, onDismiss }: AlertListProps)
               <span className={styles.icon}>
                 <TrendIcon direction={alert.direction} />
               </span>
-              <div className={styles.body}>
+              <div>
                 <p className={styles.message}>{alert.message}</p>
                 <p className={styles.meta}>
                   {alert.prices} · {alert.time}

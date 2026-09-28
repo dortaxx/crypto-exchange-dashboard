@@ -1,9 +1,8 @@
-import { formatPercent, formatPrice } from '../../domain/format'
-import { changeTrend } from '../../domain/trend'
+import { formatPrice } from '../../domain/format'
 import type { Pair, PairPrice } from '../../domain/types'
 import { CoinIcon } from '../CoinIcon/CoinIcon'
+import { PercentChange } from '../PercentChange/PercentChange'
 import { Skeleton } from '../Skeleton/Skeleton'
-import { TrendIcon } from '../TrendIcon/TrendIcon'
 import styles from './PairRow.module.css'
 
 type PairRowProps = {
@@ -25,7 +24,6 @@ export function PairRow({
   onToggleFavorite,
   onHide,
 }: PairRowProps) {
-  const trend = price === undefined ? 'flat' : changeTrend(price.changePercent)
   const placeholder = (width: string) =>
     unavailable ? (
       <span className={styles.missing}>—</span>
@@ -71,10 +69,7 @@ export function PairRow({
         {price === undefined ? (
           placeholder('3.5rem')
         ) : (
-          <span className={styles.change} data-trend={trend}>
-            {trend !== 'flat' && <TrendIcon direction={trend} />}
-            {formatPercent(price.changePercent)}
-          </span>
+          <PercentChange changePercent={price.changePercent} className={styles.change} />
         )}
       </td>
       <td className={styles.actions}>

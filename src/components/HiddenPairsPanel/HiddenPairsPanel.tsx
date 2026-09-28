@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type { Pair } from '../../domain/types'
 import { CoinIcon } from '../CoinIcon/CoinIcon'
-import { focusAfterRemoval } from '../focusAfterRemoval'
+import { focusAfterRemoval, refocus } from '../focusAfterRemoval'
 import styles from './HiddenPairsPanel.module.css'
 
 type HiddenPairsPanelProps = {
@@ -30,7 +30,7 @@ export function HiddenPairsPanel({
           className={styles.link}
           onClick={() => {
             onRestoreAll()
-            focusAfterRemoval(null, '', 0, document.getElementById(fallbackFocusId))
+            refocus(document.getElementById(fallbackFocusId))
           }}
         >
           Restore all
